@@ -1,0 +1,24 @@
+@url = http://127.0.0.1:8021
+@controller = http://127.0.0.1:3000
+@remote_controller = https://a32a-103-67-67-222.ngrok-free.app
+
+###
+POST {{url}}/endpoint
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@example.com"
+}
+###
+
+DELETE {{controller}}/connections
+
+###
+GET {{controller}}/connections
+
+###
+GET {{remote_controller}}/Connections
+
+###
+DELETE  {{remote_controller}}/Connections

@@ -1,0 +1,29 @@
+doctype html
+html
+  head
+    title Agent-1
+    link(rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css")
+  body
+    div(class="container")
+        header
+          h1 Welcome to Agent-1
+        section
+          form(action="/create-connection" method="POST")
+            fieldset 
+              legend Create a connection
+              div(class="form-group")
+                label(for="label") Your Label:
+                input(id="label" name="my_label" type="text" placeholder="Your Label")
+
+              div(class="form-group")
+                label(for="alias") Connection Alias:
+                input(id="alias" name="alias" type="text" placeholder="Provide a name for the connection")
+
+              div(class="form-group")
+                label(for="controller") Where to connect:
+                input(id="controller" name="agent_controller" type="text" placeholder="Other agent's controller url")
+
+              div(class="form-group")
+                input(type="submit" value="Submit")
+        footer
+          p © 2024 Express App
