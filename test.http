@@ -22,3 +22,10 @@ GET {{remote_controller}}/Connections
 
 ###
 DELETE  {{remote_controller}}/Connections
+
+###
+GET {{controller}}/schemas
+###
+GET {{controller}}/credential-definitions
+###
+GET {{controller}}/issue-credential

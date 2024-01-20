@@ -59,15 +59,14 @@ const routes = (app) => {
 
         // TODO: need to be dynamic
         if (response.data.results[0].state === "active") {
-          res.status(200).send("Successfully established connection!");
+          res.status(200).json({ success: true });
         } else {
-          res.status(503).send("failed to established connection.");
+          res.status(503).json({ success: false });
         }
       }, 3000);
-
-
     } catch (error) {
       console.log(error);
+      res.status(503).json({ success: false });
     }
   });
 
@@ -79,11 +78,11 @@ const routes = (app) => {
     const endpoint = tunnels.find((tunnel) => tunnel.name === "third");
     if (endpoint) {
       res.send(endpoint.public_url);
-
     } else {
       res.send('No tunnel named "third" found');
     }
   });
+
   app
     .route("/connections")
     .get(async (req, res) => {
@@ -95,6 +94,7 @@ const routes = (app) => {
         res.status(202).send(response.data);
       } catch (error) {
         console.log(error.message);
+        res.status(500).json(error.message);
       }
     })
     .delete(async (req, res) => {
@@ -109,14 +109,204 @@ const routes = (app) => {
           if (response.status !== 200)
             throw Error("Could not delete connection");
         });
-
         res
           .status(202)
           .send(`Method- ${req.method} Endpoint- ${req.originalUrl}`);
       } catch (error) {
         console.log(error.message);
+        res.status(500).json(error.message);
       }
     });
+
+  /*                                 page render                                 */
+  // schema webpage
+  app.route("/schema_def_page").get((req, res) => {
+    try {
+      res.status(200).render("schema.pug");
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  });
+
+  app.route("/cred_def_page").get(async (req, res) => {
+    // TODO: cleanup
+    try {
+      let response = await axios.get(my_server + "/schemas");
+      res
+        .status(200)
+        .render("credential_definition.pug", { schema_names: response.data });
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  });
+
+  app.route("/issue_cred_page").get((req, res) => {
+    try {
+      res.status(200).render("issue_credential.pug");
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  });
+
+  app.route("/agent_info").get(async (req, res) => {
+    try {
+      let response = await axios.get(my_server + "/schemas");
+      const schemas = response.data;
+      response = await axios.get(my_server + "/credential-definitions");
+      const cred_defs = response.data;
+      response = await axios.get(my_server + "/issue-credential");
+      const cred_records =response.data;
+      res
+        .status(200)
+        .render("agent_info.pug", { schemas: schemas, cred_defs: cred_defs, records:cred_records });
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  });
+
+  app
+    .route("/test")
+    .get(async (req, res) => {
+      res.status(200).render("test.pug");
+    })
+    .post((req, res) => {
+      res.status(200).json({ success: true });
+    });
+
+  /*                                 page render                                 */
+
+  /*                                 api                                         */
+  // SCHEMA
+  app
+    .route("/schemas")
+    //get all schema ids
+    .get(async (req, res) => {
+      try {
+        let response = await axios.get(url + "/schemas/created");
+        let schema_ids = response.data.schema_ids;
+        let schema_infos = [];
+
+        let promises = schema_ids.map(async (id) => {
+          try {
+            response = await axios.get(url + "/schemas/" + id);
+
+            schema_infos.push(response.data.schema);
+          } catch (e) {
+            console.log("Error while fetching schema info", e.message);
+          }
+        });
+        await Promise.all(promises);
+        res.status(200).json(schema_infos);
+      } catch (e) {
+        res.status(500).send(e);
+        console.log(e.message);
+      }
+    })
+    .post(async (req, res) => {
+      try {
+        console.log(req.body);
+        let attr = req.body.attributes.split(",");
+        // remove white trailing white spaces
+        attr = attr.map((e) => e.trim());
+        // console.log(attr);
+        const data = {
+          attributes: attr,
+          schema_name: req.body.schema_name,
+          schema_version: "1.0",
+        };
+        console.log(data);
+
+        const response = await axios.post(url + "/schemas", data, {
+          headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+        // console.log(response.data.sent.schema_id);
+        // res.status(202).json({ schema_id: response.data.sent.schema_id });
+        res.status(200).json({ success: true });
+      } catch (e) {
+        // res.status(500).send(e);
+        res.status(500).json({ success: false });
+        console.log(e.message);
+      }
+    });
+  // CREDENTIAL DEF
+
+  app
+    .route("/credential-definitions")
+    //get all schema ids
+    .get(async (req, res) => {
+      try {
+        let response = await axios.get(url + "/credential-definitions/created");
+        let cred_ids = response.data.credential_definition_ids;
+        let cred_infos = [];
+        console.log(cred_ids);
+
+        let promises = cred_ids.map(async (id) => {
+          try {
+            response = await axios.get(url + "/credential-definitions/" + id);
+
+            // response.data['credential_definition'].pop('value',None)
+            delete response.data.credential_definition.value;
+            cred_infos.push(response.data.credential_definition);
+          } catch (e) {
+            console.log("Error while fetching schema info", e.message);
+          }
+        });
+        await Promise.all(promises);
+        res.status(200).json(cred_infos);
+      } catch (e) {
+        res.status(200).json(e.message);
+      }
+    })
+    .post(async (req, res) => {
+      try {
+        console.log(req.body);
+        const data = {
+          schema_id: req.body.schema_id,
+          tag: req.body.tag,
+        };
+        const response = await axios.post(
+          url + "/credential-definitions",
+          data,
+          {
+            headers: {
+              accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        // console.log(response.data);
+        res.status(200).json({ success: true });
+      } catch (e) {
+        console.log(e.message);
+        res.status(500).json({ success: false });
+      }
+    });
+
+  app.route("/issue-credential").get(async (req, res) => {
+    try {
+      const response = await axios.get(url + "/issue-credential-2.0/records");
+      let cred_records = response.data.results;
+      cred_records.forEach((item) => {
+        delete item.cred_ex_record.cred_offer;
+        delete item.cred_ex_record.cred_proposal;
+        delete item.cred_ex_record.by_format;
+        delete item.indy;
+        delete item.ld_proof;
+      });
+      // console.log(cred_records);
+      res.status(200).json(cred_records);
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).json(e.message);
+    }
+  });
 
   app.route("/webhook").post(async (req, res) => {
     try {
@@ -128,12 +318,6 @@ const routes = (app) => {
       console.log();
       console.log("url string", url_string);
 
-      // let response = await axios.post(url+"/connections/create-invitation?auto_accept=true&alias=" + req.body.alias, req.body, {
-      //   headers: {
-      //     accept: "application/json",
-      //     "Content-Type": "application/json",
-      //   },
-      // });
       res.status(202).send(`${req.method} - ${req.url}`);
     } catch (error) {
       console.log(error.message);
