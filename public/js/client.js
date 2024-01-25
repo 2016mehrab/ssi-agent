@@ -1,11 +1,20 @@
 document.getElementById("myForm").addEventListener("submit", function (e) {
-  console.log("clicked");
   e.preventDefault();
   var formData = new FormData(this);
+  var object = {};
+  formData.forEach(function(value, key){
+    object[key] = value;
+  });
+  
+  var jsonData = JSON.stringify(object);
+  console.log(jsonData);
 
   fetch(this.action, {
     method: "POST",
-    body: formData,
+    body: jsonData,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
     .then((response) => response.json())
     .then((data) => {
@@ -35,6 +44,6 @@ document.getElementById("myForm").addEventListener("submit", function (e) {
       ); 
     })
     .catch((error) => {
-      console.error("Error:", error);
+      console.error("Error:", error.message);
     });
 });

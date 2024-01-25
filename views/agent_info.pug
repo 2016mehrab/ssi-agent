@@ -4,26 +4,39 @@ block content
     header
         h1 Agent Information
     section
-        table
-            caption Schemas 
-            thead
-                tr
-                    each attr in Object.keys(schemas[0])
-                        th #{attr}
-                each obj in schemas
+        if connections && connections.length > 0
+            table
+                caption connections 
+                thead
                     tr
-                        each v in Object.values(obj)
-                            td #{v}
-        table
-            caption credential definitions 
-            thead
-                tr
-                    each attr in Object.keys(cred_defs[0])
-                        th #{attr}
-                each obj in cred_defs
+                        each attr in Object.keys(connections[0])
+                            th #{attr}
+                    each obj in connections
+                        tr
+                            each v in Object.values(obj)
+                                td #{v}
+        if schemas && schemas.length > 0
+            table
+                caption Schemas 
+                thead
                     tr
-                        each v in Object.values(obj)
-                            td #{v}
+                        each attr in Object.keys(schemas[0])
+                            th #{attr}
+                    each obj in schemas
+                        tr
+                            each v in Object.values(obj)
+                                td #{v}
+        if cred_defs && cred_defs.length > 0
+            table
+                caption credential definitions 
+                thead
+                    tr
+                        each attr in Object.keys(cred_defs[0])
+                            th #{attr}
+                    each obj in cred_defs
+                        tr
+                            each v in Object.values(obj)
+                                td #{v}
 
     section
         header 

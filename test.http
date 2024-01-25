@@ -1,6 +1,6 @@
 @url = http://127.0.0.1:8021
 @controller = http://127.0.0.1:3000
-@remote_controller = https://a32a-103-67-67-222.ngrok-free.app
+@remote_controller = https://9df1-123-136-28-130.ngrok-free.app
 
 ###
 POST {{url}}/endpoint
@@ -18,7 +18,7 @@ DELETE {{controller}}/connections
 GET {{controller}}/connections
 
 ###
-GET {{remote_controller}}/Connections
+GET {{remote_controller}}/connections
 
 ###
 DELETE  {{remote_controller}}/Connections
@@ -29,3 +29,70 @@ GET {{controller}}/schemas
 GET {{controller}}/credential-definitions
 ###
 GET {{controller}}/issue-credential
+###
+POST {{controller}}/issue-credential
+Content-Type: application/json
+
+{
+    "indy_field": {
+                "cred_def_id":"VGXTHfUFKGWbnm4jkvaWCC:3:CL:232227:Grade",
+                "issuer_did":"VGXTHfUFKGWbnm4jkvaWCC" ,
+                "schema_id": "VGXTHfUFKGWbnm4jkvaWCC:2:Grade:1.0",
+                "schema_issuer_did": "VGXTHfUFKGWbnm4jkvaWCC",
+                "schema_name": "Grade",
+                "schema_version": "1.0"
+
+    },
+    "attrs": [
+        {"name":"name", "value":"Ubuntu"},
+        {"name":"id", "value":"20198227"},
+        {"name":"grade", "value":"B"}
+    ]
+}
+
+
+###
+DELETE {{controller}}/issue-credential
+###
+GET {{remote_controller}}/issue-credential
+###
+DELETE {{remote_controller}}/issue-credential
+###
+GET {{remote_controller}}/credentials
+###
+DELETE {{remote_controller}}/credentials
+###
+POST {{controller}}/present-proof
+Content-Type: application/json
+
+{
+    "attr_name":"grade",
+    "attr_val":"B",
+    "schema_name":"Grade"
+
+}
+###
+GET {{controller}}/present-proof
+###
+DELETE {{controller}}/present-proof
+###
+GET {{remote_controller}}/present-proof
+###
+DELETE {{remote_controller}}/present-proof
+###
+POST {{remote_controller}}/send-proof
+Content-Type: application/json
+
+{
+    "cred_id":"21029d99-6094-453a-9208-e5ce462cc44c",
+    "pres_ex_id":"8ef40082-0c6c-4445-897d-e341083e29bd"
+
+}
+###
+POST {{controller}}/verify
+###
+POST {{remote_controller}}/verify
+###
+GET {{controller}}/public-did
+###
+GET {{remote_controller}}/public-did
