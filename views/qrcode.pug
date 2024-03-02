@@ -1,0 +1,18 @@
+extends layout
+
+block content
+    section
+        header
+            h1 Create Invitation
+
+        div
+            h2 Scan the QR Code to access data!
+            img.qr-code(src=src alt="QR Code Image")
+            h4 #{id}
+
+    style.
+        .qr-code {
+            width: 200px;
+            height: 200px;
+        }
+

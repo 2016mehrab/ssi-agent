@@ -1,6 +1,6 @@
 @url = http://127.0.0.1:8021
 @controller = http://127.0.0.1:3000
-@remote_controller = https://9df1-123-136-28-130.ngrok-free.app
+@remote_controller = https://2333-123-136-28-130.ngrok-free.app
 
 ###
 POST {{url}}/endpoint
@@ -11,9 +11,13 @@ Content-Type: application/json
     "email": "john@example.com"
 }
 ###
+POST {{controller}}/mobile-agent-connection 
+Content-Type: application/json
 
-DELETE {{controller}}/connections
-
+{
+    "memoNameData": "winxp",
+    "emailData": "winxp@gmail.com"
+}
 ###
 GET {{controller}}/connections
 
@@ -22,6 +26,10 @@ GET {{remote_controller}}/connections
 
 ###
 DELETE  {{remote_controller}}/Connections
+###
+
+DELETE {{controller}}/connections
+
 
 ###
 GET {{controller}}/schemas
@@ -44,9 +52,9 @@ Content-Type: application/json
 
     },
     "attrs": [
-        {"name":"name", "value":"Ubuntu"},
-        {"name":"id", "value":"20198227"},
-        {"name":"grade", "value":"B"}
+        {"name":"name", "value":"Arie"},
+        {"name":"id", "value":"20101498"},
+        {"name":"grade", "value":"D"}
     ]
 }
 
@@ -66,12 +74,12 @@ POST {{controller}}/present-proof
 Content-Type: application/json
 
 {
-    "attr_name":"grade",
-    "attr_val":"B",
-    "schema_name":"Grade"
+    "attr_name":"id",
+    "attr_val":"20101334",
+    "cred_def_id":"VGXTHfUFKGWbnm4jkvaWCC:3:CL:232227:Grade"
 
 }
-###
+### 
 GET {{controller}}/present-proof
 ###
 DELETE {{controller}}/present-proof
@@ -84,8 +92,8 @@ POST {{remote_controller}}/send-proof
 Content-Type: application/json
 
 {
-    "cred_id":"21029d99-6094-453a-9208-e5ce462cc44c",
-    "pres_ex_id":"8ef40082-0c6c-4445-897d-e341083e29bd"
+    "cred_id":"56291836-4c50-421c-b3f6-bd3f4acda0a9",
+    "pres_ex_id":"4ceb578c-1a58-4317-ac9e-2fa46da70a2d"
 
 }
 ###
@@ -96,3 +104,18 @@ POST {{remote_controller}}/verify
 GET {{controller}}/public-did
 ###
 GET {{remote_controller}}/public-did
+###
+POST {{controller}}/request-proof-v1
+Content-Type: application/json
+
+{
+    "attr_name":"id",
+    "attr_val":"20101334",
+    "schema_name":"Grade"
+
+}
+###
+GET {{controller}}/request-proof-v1
+###
+DELETE  {{controller}}/request-proof-v1
+###

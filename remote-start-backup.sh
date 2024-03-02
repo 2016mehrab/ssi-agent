@@ -1,10 +1,14 @@
 #!/bin/bash
 
 # Fetch the endpoint
-THIRD_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="third") | .public_url')
+AGENT_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="agent") | .public_url')
+CONTROLLER_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="controller") | .public_url')
+CONTROLLER_TUNNEL="${CONTROLLER_TUNNEL}/webhooks"
+
+# echo "Running control $CONTROLLER_TUNNEL"
 
 # Define the command
-CMD="aca-py start  --endpoint $THIRD_TUNNEL \
+CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --label ubuntu \
    --inbound-transport http 0.0.0.0 8020 \
    --outbound-transport http \
@@ -29,6 +33,11 @@ CMD="aca-py start  --endpoint $THIRD_TUNNEL \
    --auto-respond-credential-request \
    --auto-store-credential \
    --debug-connections \
+   --webhook-url $CONTROLLER_TUNNEL \
+   --debug-presentations \
+   --debug-credentials \
+   --debug-webhooks \
+   --auto-verify-presentation \
    --public-invites "
 
 # Print the command
