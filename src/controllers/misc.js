@@ -123,3 +123,19 @@ exports.publicDid = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
+
+exports.getConnectionStatus = async (req, res) => {
+  if (connection_status === null) {
+    res.status(200).json(null);
+  } else {
+    res.status(200).json(connection_id);
+  }
+};
+
+exports.getConnectionInfo = async (req, res) => {
+  if (connection_status === null) {
+    res.status(200).json(null);
+  } else {
+    res.status(200).json({ id: connection_id, status: connection_status });
+  }
+};

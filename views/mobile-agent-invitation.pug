@@ -8,7 +8,7 @@ block content
         div
             h2 Scan the QR Code to access data!
             img.qr-code(src=src alt="QR Code Image")
-            h4 #{id}
+            h4(id="connection_id")  #{id}
 
     style.
         .qr-code {
@@ -16,3 +16,4 @@ block content
             height: 200px;
         }
 
+    script(type='text/javascript', src="/js/mobile-agent-connection.js")

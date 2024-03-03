@@ -1,5 +1,4 @@
-// res.status(200).send(`${req.method} - ${req.originalUrl}`);
-const url = "http://127.0.0.1:8021";
+const axios = require("axios");
 const my_server = "http://127.0.0.1:3000";
 const { generateQRcode } = require("../controllers/mobileAgentConnections.js");
 const {
@@ -34,19 +33,70 @@ const {
 } = require("../controllers/requesetProofs.js");
 
 const {
+  getConnectionInfo,
+  getConnectionStatus,
   ngrok,
   sendProof,
   verify,
   publicDid,
 } = require("../controllers/misc.js");
-
-const axios = require("axios");
-// const controller_url = "https://a32a-103-67-67-222.ngrok-free.app";
 global.connection_status = null;
+global.connection_id = null;
 
 const routes = (app) => {
+  /*                                 api                                         */
+  app
+    .route("/connections")
+    .get(getConnections)
+    .post(createConnection)
+    .delete(deleteConnections);
+
+  app.route("/mobile-agent-connection-generation").post(generateQRcode);
+  app.route("/ngrok").get(ngrok);
+  // SCHEMA DEF
+  app.route("/schemas").get(getAllSchemas).post(postSchema);
+
+  // CREDENTIAL DEF
+  app
+    .route("/credential-definitions")
+    .get(getAllCredentialDefinitions)
+    .post(postCredentialDefinition);
+
+  app
+    .route("/issue-credential")
+    .get(getAllIssueCredentials)
+    .post(postIssueCredential)
+    .delete(deleteAllIssueCredentials);
+
+  app
+    .route("/present-proof")
+    .get(getAllPresentProofs)
+    .post(postPresentProof)
+    .delete(deleteAllPresentProofs);
+  app
+    .route("/request-proof-v1")
+    .get(getProofRecords)
+    .post(requestProof)
+    .delete(deleteProofRecords);
+
+  app.route("/send-proof").post(sendProof);
+  app.route("/verify").post(verify);
+  app.route("/public-did").get(publicDid);
+
+  app.route("/credentials").get(getAllCredentials).delete(deleteAllCredentials);
+  app.route("/status").get(getConnectionStatus);
+  app.route("/connection-info").get(getConnectionInfo);
+
   /*                                 page render                                 */
-  // schema webpage
+  app.route("/generate_invitation_page").get((req, res) => {
+    try {
+      res.status(200).render("generate_invitation.pug");
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  });
+
   app.route("/schema_def_page").get((req, res) => {
     try {
       res.status(200).render("schema.pug");
@@ -78,7 +128,7 @@ const routes = (app) => {
     }
   });
 
-  app.route("/agent_info").get(async (req, res) => {
+  app.route("/agent_info_page").get(async (req, res) => {
     try {
       let response = await axios.get(my_server + "/schemas");
       const schemas = response.data;
@@ -126,93 +176,55 @@ const routes = (app) => {
   });
   /*                                 page render                                 */
 
-  /*                                 api                                         */
-  app
-    .route("/connections")
-    .get(getConnections)
-    .post(createConnection)
-    .delete(deleteConnections);
-
-  app.route("/mobile-agent-connection-generation").post(generateQRcode);
-  app.route("/ngrok").get(ngrok);
-  // SCHEMA DEF
-  app.route("/schemas").get(getAllSchemas).post(postSchema);
-
-  // CREDENTIAL DEF
-  app
-    .route("/credential-definitions")
-    .get(getAllCredentialDefinitions)
-    .post(postCredentialDefinition);
-
-  app
-    .route("/issue-credential")
-    .get(getAllIssueCredentials)
-    .post(postIssueCredential)
-    .delete(deleteAllIssueCredentials);
-
-  app
-    .route("/present-proof")
-    .get(getAllPresentProofs)
-    .post(postPresentProof)
-    .delete(deleteAllPresentProofs);
-  app
-    .route("/request-proof-v1")
-    .get(getProofRecords)
-    .post(requestProof)
-    .delete(deleteProofRecords);
-
-  app.route("/send-proof").post(sendProof);
-  app.route("/verify").post(verify);
-  app.route("/public-did").get(publicDid);
-
-  app.route("/credentials").get(getAllCredentials).delete(deleteAllCredentials);
-
   app
     .route("/webhooks/*")
     .get((req, res) => {
       res.status(200).send(`${req.method} - TO ${req.url}`);
     })
-    
+
     .post(async (req, res) => {
       // console.log("REQ BODY FROM WEBHOOK",req.body);
+      connection_status = req.body["state"];
+      if (connection_status === "completed" || connection_status === "active") {
+        connection_id = req.body["connection_id"];
+        console.log("Connction status->", connection_status);
+        console.log("Connection Complete!");
+      }
+      if (connection_id) {
+        if (req.body["state"] === "credential_acked") {
+          console.log("Credential acked...");
+        }
+        if (req.body["verified"] === "true") {
+          console.log("Credential Being Verified");
 
-      const connection_id = req.body["connection_id"];
-      let connection_status = req.body["state"];
+          // TODO : need to make it compatible with version 2
+          var base64data = JSON.stringify(
+            req.body["presentation_request_dict"][
+              "request_presentations~attach"
+            ][0]["data"]["base64"]
+          );
+
+          // converting to buffer string from base64
+          const decodedString = Buffer.from(base64data, "base64");
+          // console.log("decodedString- ",decodedString);
+
+          // convert it to regular string
+          const jsonData = JSON.parse(decodedString.toString());
+          console.log("jsonData- ", jsonData);
+          // proofStatus = true;
+          // retrievedAttribute =
+          //   jsonData["requested_attributes"]["0_role"]["value"];
+          // req.session.credStatus = true
+        } else {
+        }
+      } else {
+        console.log("No connection id");
+      }
       // const connection_status = req.body["rfc23_state"];
       // console.log("connection id->", connection_id);
       // console.log("connection status->", connection_status);
       // if (connection_id) {
       // TODO : make connection_id and status a global variable when newly established
-      if (connection_status === "completed" || connection_status === "active") {
-        console.log("Connection Complete!");
-      }
-      if (req.body["state"] === "credential_acked") {
-        console.log("Credential acked...");
-      }
-      if (req.body["verified"] === "true") {
-        console.log("Credential Being Verified");
-
-        // TODO : need to make it compatible with version 2
-        var base64data = JSON.stringify(
-          req.body["presentation_request_dict"][
-            "request_presentations~attach"
-          ][0]["data"]["base64"]
-        );
-
-        // converting to buffer string from base64
-        const decodedString = Buffer.from(base64data, "base64");
-        // console.log("decodedString- ",decodedString);
-
-        // convert it to regular string
-        const jsonData = JSON.parse(decodedString.toString());
-        console.log("jsonData- ", jsonData);
-        // proofStatus = true;
-        // retrievedAttribute =
-        //   jsonData["requested_attributes"]["0_role"]["value"];
-        // req.session.credStatus = true
-      } else {
-        console.log("DID NOT WORK");
-      }
     });
 };
 export default routes;

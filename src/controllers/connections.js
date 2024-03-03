@@ -6,14 +6,14 @@ const ngrok_url = "http://127.0.0.1:4040/api/tunnels";
 async function getConnections(req, res) {
   try {
     let response = await axios.get(url + "/connections");
-    res.status(202).json({ data: res.data });
+    res.status(202).json(response.data);
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ error: error.message });
   }
 }
 
-async function deleteConnections() {
+async function deleteConnections(req, res) {
   try {
     let response = await axios.get(url + "/connections");
     let connection_ids = response.data.results.map((e) => e.connection_id);
@@ -23,6 +23,8 @@ async function deleteConnections() {
       response = await axios.delete(url + "/connections/" + e);
       if (response.status !== 200) throw Error("Could not delete connection");
     });
+    connection_id = null;
+    connection_status = null;
     res.status(202).json({ message: "Connections deleted" });
   } catch (error) {
     console.log(error.message);
@@ -30,7 +32,7 @@ async function deleteConnections() {
   }
 }
 
-async function createConnection(req) {
+async function createConnection(req, res) {
   const { my_label, alias, agent_controller } = req.body;
 
   try {
