@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  section
+    header
+      h1 Generate Invitation
+
+    form(id="myForm" action="/mobile-agent-connection-generation" method="POST")
+      fieldset 
+        legend Generate Invitation
+        div(class="form-group")
+          label(for='memName') Please enter a connection-alias:
+          input(type='text' name='connection_alias' id='memName' placeholder='text')
+        div(class="form-group")
+          input(type="submit" value="Submit")

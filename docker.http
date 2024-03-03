@@ -1,0 +1,35 @@
+@docker_controller = https://92db-123-136-28-130.ngrok-free.app
+@controller = https://92db-123-136-28-130.ngrok-free.app
+###
+GET {{docker_controller}}/connections
+###
+DELETE  {{docker_controller}}/connections
+###
+POST {{controller}}/present-proof
+Content-Type: application/json
+
+{
+    "attr_name":"id",
+    "attr_val":"20101334",
+    "cred_def_id":"VGXTHfUFKGWbnm4jkvaWCC:3:CL:232227:Grade"
+
+}
+### 
+GET {{controller}}/present-proof
+###
+DELETE {{controller}}/present-proof
+###
+POST {{controller}}/request-proof-v1
+Content-Type: application/json
+
+{
+    "attr_name":"id",
+    "attr_val":"20101334",
+    "schema_name":"Grade"
+
+}
+###
+GET {{controller}}/request-proof-v1
+###
+DELETE  {{controller}}/request-proof-v1
+###

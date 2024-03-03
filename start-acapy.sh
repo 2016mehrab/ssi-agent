@@ -10,21 +10,21 @@ CONTROLLER_TUNNEL="${CONTROLLER_TUNNEL}/webhooks"
 # Docker --seed fakeMehrab0000000000000000000000 \
 # Define the command
 CMD="aca-py start  --endpoint $AGENT_TUNNEL \
-   --label winxp \
+   --label IDP \
    --inbound-transport http 0.0.0.0 8020 \
    --outbound-transport http \
    --admin 0.0.0.0 8021 \
    --admin-insecure-mode \
    --wallet-type askar \
-   --wallet-name winxpWallet \
-   --wallet-key secret \
+   --wallet-name IDPWallet \
+   --wallet-key idpsecret \
    --preserve-exchange-records \
    --auto-provision \
    --genesis-url http://dev.greenlight.bcovrin.vonx.io/genesis \
    --trace-target log \
    --seed Mehrab00000000000000000000000000 \
-   --trace-tag acapy.events \
-   --trace-label faber.agent.trace \
+   --trace-tag idp.events \
+   --trace-label idp.agent.trace \
    --auto-ping-connection \
    --auto-respond-messages \
    --auto-accept-invites \
