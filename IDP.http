@@ -7,6 +7,8 @@ GET {{controller}}/status
 ###
 GET {{controller}}/connection-info
 ###
+GET {{controller}}/set-globals
+###
 DELETE {{controller}}/connections
 ###
 GET {{controller}}/schemas

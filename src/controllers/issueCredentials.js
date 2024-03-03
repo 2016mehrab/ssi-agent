@@ -1,4 +1,5 @@
 const url = "http://127.0.0.1:8021";
+const { v4: uuidv4 } = require('uuid');
 const axios = require("axios");
 
 exports.getAllIssueCredentials = async (req, res) => {
@@ -21,47 +22,58 @@ exports.getAllIssueCredentials = async (req, res) => {
   }
 };
 
+// TODO : need to implement it properly
 exports.postIssueCredential = async (req, res) => {
   let response;
+  console.log("postIssueCredential req body->", req.body);
+  const id= uuidv4();
   try {
-    response = await axios.get(my_server + "/connections");
+    // response = await axios.get(my_server + "/connections");
 
     // TODO: fix replacement_id & connection_id
     let data = {
       auto_issue: true,
       auto_remove: false,
       comment: "string",
-      connection_id: response.data.results[0].connection_id,
+      connection_id: global_connection_id,
       credential_preview: {
         "@type": "issue-credential/2.0/credential-preview",
         attributes: [...req.body.attrs],
       },
       filter: {
         indy: {
-          cred_def_id: req.body.indy_field.cred_def_id,
-          issuer_did: req.body.indy_field.issuer_did,
-          schema_id: req.body.indy_field.schema_id,
-          schema_issuer_did: req.body.indy_field.schema_issuer_did,
-          schema_name: req.body.indy_field.schema_name,
-          schema_version: req.body.indy_field.schema_version,
+          // cred_def_id: req.body.indy_field.cred_def_id,
+          // issuer_did: req.body.indy_field.issuer_did,
+          // schema_id: req.body.indy_field.schema_id,
+          // schema_issuer_did: req.body.indy_field.schema_issuer_did,
+          // schema_name: req.body.indy_field.schema_name,
+          // schema_version: req.body.indy_field.schema_version,
+          cred_def_id: global_cred_def.id,
+          issuer_did: global_issuer_did,
+          schema_id: global_schema_def.id,
+          schema_issuer_did: global_schema_def.id.split(":")[0],
+          schema_name: global_schema_def.name,
+          schema_version: global_schema_def.version,
         },
       },
       //   replacement_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       trace: true,
     };
 
-    response = await axios.post(
-      url + "/issue-credential-2.0/send-offer",
-      data,
-      {
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    console.log("postIssueCredential data", data);
 
-    res.status(200).json(response.data);
+    // response = await axios.post(
+    //   url + "/issue-credential-2.0/send-offer",
+    //   data,
+    //   {
+    //     headers: {
+    //       accept: "application/json",
+    //       "Content-Type": "application/json",
+    //     },
+    //   }
+    // );
+
+    // res.status(200).json(response.data);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

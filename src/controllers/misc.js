@@ -125,17 +125,68 @@ exports.publicDid = async (req, res) => {
 };
 
 exports.getConnectionStatus = async (req, res) => {
-  if (connection_status === null) {
+  if (global_connection_status === null) {
     res.status(200).json(null);
   } else {
-    res.status(200).json(connection_id);
+    res.status(200).json(global_connection_id);
   }
 };
 
 exports.getConnectionInfo = async (req, res) => {
-  if (connection_status === null) {
+  if (global_connection_status === null) {
     res.status(200).json(null);
   } else {
-    res.status(200).json({ id: connection_id, status: connection_status });
+    res.status(200).json({
+      id: global_connection_id,
+      status: global_connection_status,
+      global_schema_def,
+      global_cred_def,
+      issuer_did: global_issuer_did,
+    });
+  }
+};
+
+exports.setGlobals = async (req, res) => {
+  try {
+    // Make requests in parallel
+    const [
+      schemasResponse,
+      connectionsResponse,
+      credDefinitionsResponse,
+      publicDidResponse,
+    ] = await Promise.all([
+      axios.get(`${my_server}/schemas`),
+      axios.get(`${my_server}/connections`),
+      axios.get(`${my_server}/credential-definitions`),
+      axios.get(`${my_server}/public-did`),
+    ]);
+
+    // Extract data from responses
+    const schemasData = schemasResponse.data;
+    const connectionsData = connectionsResponse.data;
+    const credDefinitionsData = credDefinitionsResponse.data;
+    const didResponseData = publicDidResponse.data;
+
+    // Set global variables if data is available
+    if (connectionsData?.results?.length > 0) {
+      global_connection_id = connectionsData.results[0].connection_id;
+      global_connection_status = connectionsData.results[0].state;
+    }
+    if (schemasData?.length > 0) {
+      global_schema_def = schemasData[0];
+    }
+
+    if (didResponseData) {
+      global_issuer_did = didResponseData.did;
+    }
+
+    if (credDefinitionsData?.length > 0) {
+      global_cred_def = credDefinitionsData[0];
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error setting globals:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 };

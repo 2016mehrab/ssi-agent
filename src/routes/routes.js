@@ -33,6 +33,7 @@ const {
 } = require("../controllers/requesetProofs.js");
 
 const {
+  setGlobals,
   getConnectionInfo,
   getConnectionStatus,
   ngrok,
@@ -40,8 +41,13 @@ const {
   verify,
   publicDid,
 } = require("../controllers/misc.js");
-global.connection_status = null;
-global.connection_id = null;
+/* GLOBAL */
+global.global_issuer_did = null;
+global.global_connection_status = null;
+global.global_schema_def = null;
+global.global_cred_def = null;
+global.global_connection_id = null;
+/* GLOBAL */
 
 const routes = (app) => {
   /*                                 api                                         */
@@ -86,6 +92,7 @@ const routes = (app) => {
   app.route("/credentials").get(getAllCredentials).delete(deleteAllCredentials);
   app.route("/status").get(getConnectionStatus);
   app.route("/connection-info").get(getConnectionInfo);
+  app.route("/set-globals").get(setGlobals);
 
   /*                                 page render                                 */
   app.route("/generate_invitation_page").get((req, res) => {
@@ -119,9 +126,13 @@ const routes = (app) => {
     }
   });
 
-  app.route("/issue_cred_page").get((req, res) => {
+  app.route("/issue_cred_page").get(async (req, res) => {
     try {
-      res.status(200).render("issue_credential.pug");
+      let response = await axios.get(my_server + "/schemas");
+      const schemas = response.data;
+      res
+        .status(200)
+        .render("issue_credential.pug", { attrs: schemas[0].attrNames });
     } catch (e) {
       console.log(e.message);
       res.status(500).render("error.pug");
@@ -184,13 +195,16 @@ const routes = (app) => {
 
     .post(async (req, res) => {
       // console.log("REQ BODY FROM WEBHOOK",req.body);
-      connection_status = req.body["state"];
-      if (connection_status === "completed" || connection_status === "active") {
-        connection_id = req.body["connection_id"];
+      global_connection_status = req.body["state"];
+      if (
+        global_connection_status === "completed" ||
+        global_connection_status === "active"
+      ) {
+        global_connection_id = req.body["connection_id"];
         console.log("Connction status->", connection_status);
         console.log("Connection Complete!");
       }
-      if (connection_id) {
+      if (global_connection_id) {
         if (req.body["state"] === "credential_acked") {
           console.log("Credential acked...");
         }

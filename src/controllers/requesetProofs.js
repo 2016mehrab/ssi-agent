@@ -38,7 +38,8 @@ exports.requestProof = async (req, res) => {
   console.log("attr_val", req.body.attr_val);
 
   let data = {
-    connection_id: response.data.results[0].connection_id,
+    // connection_id: response.data.results[0].connection_id,
+    connection_id: global_connection_id,
     trace: true,
     proof_request: {
       name: "Prove to IDP",

@@ -1,5 +1,5 @@
 const url = "http://127.0.0.1:8021";
-const axios = require('axios');
+const axios = require("axios");
 
 exports.getAllPresentProofs = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ exports.getAllPresentProofs = async (req, res) => {
     console.log(e.message);
     res.status(500).json(e.message);
   }
-}
+};
 
 exports.postPresentProof = async (req, res) => {
   let response;
@@ -32,7 +32,8 @@ exports.postPresentProof = async (req, res) => {
     let data = {
       auto_verify: true,
       auto_remove: false,
-      connection_id: response.data.results[0].connection_id,
+      // connection_id: response.data.results[0].connection_id,
+      connection_id: global_connection_id,
       presentation_request: {
         indy: {
           non_revoked: {},
@@ -50,38 +51,30 @@ exports.postPresentProof = async (req, res) => {
       trace: true,
     };
 
-    response = await axios.post(
-      url + "/present-proof-2.0/send-request",
-      data,
-      {
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    response = await axios.post(url + "/present-proof-2.0/send-request", data, {
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
 
     res.status(200).json(response.data);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
-}
+};
 
 exports.deleteAllPresentProofs = async (req, res) => {
   try {
     let response = await axios.get(url + "/present-proof-2.0/records");
     let pres_ex_ids = response.data.results.map((e) => e.pres_ex_id);
     pres_ex_ids.map(async (e) => {
-      response = await axios.delete(
-        url + "/present-proof-2.0/records/" + e
-      );
+      response = await axios.delete(url + "/present-proof-2.0/records/" + e);
       if (response.status !== 200) throw Error("Could not delete record");
     });
-    res
-      .status(202)
-      .send(`Method- ${req.method} Endpoint- ${req.originalUrl}`);
+    res.status(202).send(`Method- ${req.method} Endpoint- ${req.originalUrl}`);
   } catch (error) {
     console.log(error.message);
     res.status(500).json(error.message);
   }
-}
+};
