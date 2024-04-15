@@ -1,4 +1,4 @@
-const axios = require('axios');
+const axios = require("axios");
 const url = "http://127.0.0.1:8021";
 
 exports.getAllSchemas = async (req, res) => {
@@ -10,7 +10,9 @@ exports.getAllSchemas = async (req, res) => {
     let promises = schema_ids.map(async (id) => {
       try {
         response = await axios.get(url + "/schemas/" + id);
-        schema_infos.push(response.data.schema);
+        if (response.data.schema) {
+          schema_infos.push(response.data.schema);
+        }
       } catch (e) {
         console.log("Error while fetching schema info", e.message);
       }
@@ -21,7 +23,7 @@ exports.getAllSchemas = async (req, res) => {
     res.status(500).send(e);
     console.log(e.message);
   }
-}
+};
 
 exports.postSchema = async (req, res) => {
   try {
@@ -47,4 +49,4 @@ exports.postSchema = async (req, res) => {
     res.status(500).json({ success: false });
     console.log(e.message);
   }
-}
+};

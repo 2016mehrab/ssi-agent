@@ -23,8 +23,8 @@ async function deleteConnections(req, res) {
       response = await axios.delete(url + "/connections/" + e);
       if (response.status !== 200) throw Error("Could not delete connection");
     });
-    connection_id = null;
-    connection_status = null;
+    global_connection_id = null;
+    global_connection_status = null;
     res.status(202).json({ message: "Connections deleted" });
   } catch (error) {
     console.log(error.message);

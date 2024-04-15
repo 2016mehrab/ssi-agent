@@ -3,6 +3,8 @@
 ###
 GET {{controller}}/connections
 ###
+DELETE {{controller}}/connections
+###
 GET {{controller}}/status
 ###
 GET {{controller}}/connection-info

@@ -14,6 +14,7 @@ const {
 const {
   getAllIssueCredentials,
   postIssueCredential,
+  postIssueCredentialV1,
   deleteAllIssueCredentials,
 } = require("../controllers/issueCredentials.js");
 const {
@@ -36,6 +37,7 @@ const {
   setGlobals,
   getConnectionInfo,
   getConnectionStatus,
+  getCredentialStatus,
   ngrok,
   sendProof,
   verify,
@@ -44,6 +46,7 @@ const {
 /* GLOBAL */
 global.global_issuer_did = null;
 global.global_connection_status = null;
+global.global_credential_status = null;
 global.global_schema_def = null;
 global.global_cred_def = null;
 global.global_connection_id = null;
@@ -71,7 +74,7 @@ const routes = (app) => {
   app
     .route("/issue-credential")
     .get(getAllIssueCredentials)
-    .post(postIssueCredential)
+    .post(postIssueCredentialV1)
     .delete(deleteAllIssueCredentials);
 
   app
@@ -91,6 +94,7 @@ const routes = (app) => {
 
   app.route("/credentials").get(getAllCredentials).delete(deleteAllCredentials);
   app.route("/status").get(getConnectionStatus);
+  app.route("/credential-status").get(getCredentialStatus);
   app.route("/connection-info").get(getConnectionInfo);
   app.route("/set-globals").get(setGlobals);
 
@@ -194,20 +198,24 @@ const routes = (app) => {
     })
 
     .post(async (req, res) => {
-      // console.log("REQ BODY FROM WEBHOOK",req.body);
+      console.log("REQ BODY FROM WEBHOOK",req.body);
       global_connection_status = req.body["state"];
       if (
         global_connection_status === "completed" ||
         global_connection_status === "active"
       ) {
         global_connection_id = req.body["connection_id"];
-        console.log("Connction status->", connection_status);
+        console.log("Connction status->", global_connection_status);
         console.log("Connection Complete!");
       }
+
       if (global_connection_id) {
         if (req.body["state"] === "credential_acked") {
           console.log("Credential acked...");
+          global_credential_status = true;
+          // req.session.credStatus = true
         }
+
         if (req.body["verified"] === "true") {
           console.log("Credential Being Verified");
 

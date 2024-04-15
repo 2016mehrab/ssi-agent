@@ -132,6 +132,13 @@ exports.getConnectionStatus = async (req, res) => {
   }
 };
 
+exports.getCredentialStatus = async (req, res) => {
+  if (global_credential_status === null) {
+    res.status(200).json(null);
+  } else {
+    res.status(200).json(global_credential_status);
+  }
+};
 exports.getConnectionInfo = async (req, res) => {
   if (global_connection_status === null) {
     res.status(200).json(null);

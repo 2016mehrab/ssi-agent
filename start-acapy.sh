@@ -20,7 +20,7 @@ CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --wallet-key idpsecret \
    --preserve-exchange-records \
    --auto-provision \
-   --genesis-url http://dev.greenlight.bcovrin.vonx.io/genesis \
+   --genesis-url http://test.bcovrin.vonx.io/genesis \
    --trace-target log \
    --seed Mehrab00000000000000000000000000 \
    --trace-tag idp.events \
