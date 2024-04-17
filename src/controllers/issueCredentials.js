@@ -82,6 +82,7 @@ exports.postIssueCredentialV1 = async (req, res) => {
   }
 };
 
+// VERSION 2.0
 // TODO : Proper redirection
 exports.postIssueCredential = async (req, res) => {
   let response;
@@ -123,18 +124,12 @@ exports.postIssueCredential = async (req, res) => {
       },
       filter: {
         indy: {
-          // cred_def_id: req.body.indy_field.cred_def_id,
-          // issuer_did: req.body.indy_field.issuer_did,
-          // schema_id: req.body.indy_field.schema_id,
-          // schema_issuer_did: req.body.indy_field.schema_issuer_did,
-          // schema_name: req.body.indy_field.schema_name,
-          // schema_version: req.body.indy_field.schema_version,
-          cred_def_id: global_cred_def.id,
-          issuer_did: global_issuer_did,
-          schema_id: global_schema_def.id,
-          schema_issuer_did: global_schema_def.id.split(":")[0],
-          schema_name: global_schema_def.name,
-          schema_version: global_schema_def.version,
+          cred_def_id:"VGXTHfUFKGWbnm4jkvaWCC:3:CL:507163:VC",
+          issuer_did: "VGXTHfUFKGWbnm4jkvaWCC",
+          schema_id:"VGXTHfUFKGWbnm4jkvaWCC:2:FEDERATION:1.0",
+          schema_issuer_did:"VGXTHfUFKGWbnm4jkvaWCC" ,
+          schema_name:"FEDERATION" ,
+          schema_version: "1.0",
         },
       },
       //   replacement_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",

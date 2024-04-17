@@ -43,6 +43,9 @@ const {
   verify,
   publicDid,
 } = require("../controllers/misc.js");
+
+const ConnectionModel = require("../models/Connection.js");
+
 /* GLOBAL */
 global.global_issuer_did = null;
 global.global_connection_status = null;
@@ -74,7 +77,7 @@ const routes = (app) => {
   app
     .route("/issue-credential")
     .get(getAllIssueCredentials)
-    .post(postIssueCredentialV1)
+    .post(postIssueCredential)
     .delete(deleteAllIssueCredentials);
 
   app
@@ -134,9 +137,13 @@ const routes = (app) => {
     try {
       let response = await axios.get(my_server + "/schemas");
       const schemas = response.data;
+      let federationSchema = schemas.filter(
+        (schema) => schema.name === "FEDERATION"
+      )[0];
+
       res
         .status(200)
-        .render("issue_credential.pug", { attrs: schemas[0].attrNames });
+        .render("issue_credential.pug", { attrs: federationSchema.attrNames });
     } catch (e) {
       console.log(e.message);
       res.status(500).render("error.pug");
@@ -198,13 +205,22 @@ const routes = (app) => {
     })
 
     .post(async (req, res) => {
-      console.log("REQ BODY FROM WEBHOOK",req.body);
+      console.log("REQ BODY FROM WEBHOOK", req.body);
       global_connection_status = req.body["state"];
-      if (
-        global_connection_status === "completed" ||
-        global_connection_status === "active"
-      ) {
+      if (global_connection_status === "active") {
         global_connection_id = req.body["connection_id"];
+        try {
+          const connection = await ConnectionModel.create({
+            alias: req.body["alias"],
+            connectionId: req.body["connection_id"],
+          });
+          res.cookie("connectionId", req.body["connection_id"]);
+        } catch (error) {
+          console.log(
+            "Failed to create db entry for connection",
+            error.message
+          );
+        }
         console.log("Connction status->", global_connection_status);
         console.log("Connection Complete!");
       }
@@ -242,11 +258,8 @@ const routes = (app) => {
       } else {
         console.log("No connection id");
       }
-      // const connection_status = req.body["rfc23_state"];
-      // console.log("connection id->", connection_id);
-      // console.log("connection status->", connection_status);
-      // if (connection_id) {
-      // TODO : make connection_id and status a global variable when newly established
     });
 };
 export default routes;
+
+// TODO : cookie based session management.
