@@ -14,6 +14,7 @@ RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/truste
 RUN pip install aries-cloudagent
 RUN pip install aries_askar
 RUN pip install indy_credx
+RUN pip install anoncreds
 RUN pip install indy_vdr
 
 # Create directories
