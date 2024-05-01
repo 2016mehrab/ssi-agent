@@ -3,13 +3,10 @@ extends layout
 block content
     section
       header
-        h1 Credential Definition
-      form(id="myForm" action="/credential-definitions" method="POST")
+        h1 Schema Selection
+      form(id="myForm" action="/get-credential" method="POST")
         fieldset 
-          legend Create credential definition
-          div(class="form-group")
-            label(for="cred_tag") Credential Tag:
-            input(id="cred_tag" name="tag" type="text" placeholder="Credential Tag")
+          legend 
           div(class="form-group")
             label(for="schema_name") Select schema 
             select(id="schema_name" name="schema_id")

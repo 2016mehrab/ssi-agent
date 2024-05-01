@@ -14,6 +14,7 @@ const {
 const {
   getAllIssueCredentials,
   postIssueCredential,
+  postIssueCredentialDynamic,
   postIssueCredentialV1,
   deleteAllIssueCredentials,
 } = require("../controllers/issueCredentials.js");
@@ -42,6 +43,7 @@ const {
   sendProof,
   verify,
   publicDid,
+  setConnectionId
 } = require("../controllers/misc.js");
 
 const ConnectionModel = require("../models/Connection.js");
@@ -77,7 +79,7 @@ const routes = (app) => {
   app
     .route("/issue-credential")
     .get(getAllIssueCredentials)
-    .post(postIssueCredential)
+    .post(postIssueCredentialDynamic)
     .delete(deleteAllIssueCredentials);
 
   app
@@ -100,6 +102,7 @@ const routes = (app) => {
   app.route("/credential-status").get(getCredentialStatus);
   app.route("/connection-info").get(getConnectionInfo);
   app.route("/set-globals").get(setGlobals);
+  app.route("/set-connectionid").get(setConnectionId);
 
   /*                                 page render                                 */
   app.route("/generate_invitation_page").get((req, res) => {
@@ -120,35 +123,49 @@ const routes = (app) => {
     }
   });
 
-  app.route("/cred_def_page").get(async (req, res) => {
+  app.route("/get-credential").post(async(req, res) => {
+    try {
+      let response = await axios.get(my_server + "/schemas");
+      const schemas = response.data;
+      let selected_schema = schemas.filter(
+        (schema) => schema.id === req.body.schema_id
+      )[0];
+      res.status(200).render("issue_credential.pug", {schema_id:selected_schema.id,attrs:selected_schema.attrNames});
+    } catch (e) {
+      console.log(req.originalUrl+" -> " +e.message);
+      res.status(500).render("error.pug");
+    }
+  });
+
+
+  app.route("/select_schema").get(async (req, res) => {
     // TODO: cleanup
     try {
       let response = await axios.get(my_server + "/schemas");
       res
         .status(200)
-        .render("credential_definition.pug", { schema_names: response.data });
+        .render("select_schema.pug", { schema_names: response.data });
     } catch (e) {
       console.log(e.message);
       res.status(500).render("error.pug");
     }
   });
 
-  app.route("/issue_cred_page").get(async (req, res) => {
-    try {
-      let response = await axios.get(my_server + "/schemas");
-      const schemas = response.data;
-      let federationSchema = schemas.filter(
-        (schema) => schema.name === "FEDERATION"
-      )[0];
-
-      res
-        .status(200)
-        .render("issue_credential.pug", { attrs: federationSchema.attrNames });
-    } catch (e) {
-      console.log(e.message);
-      res.status(500).render("error.pug");
-    }
-  });
+  // app.route("/issue_cred_page").get(async (req, res) => {
+  //   try {
+  //     let response = await axios.get(my_server + "/schemas");
+  //     const schemas = response.data;
+  //     let federationSchema = schemas.filter(
+  //       (schema) => schema.name === "FEDERATION"
+  //     )[0];
+  //     res
+  //       .status(200)
+  //       .render("issue_credential.pug", { attrs: federationSchema.attrNames });
+  //   } catch (e) {
+  //     console.log(e.message);
+  //     res.status(500).render("error.pug");
+  //   }
+  // });
 
   app.route("/agent_info_page").get(async (req, res) => {
     try {
@@ -205,7 +222,7 @@ const routes = (app) => {
     })
 
     .post(async (req, res) => {
-      console.log("REQ BODY FROM WEBHOOK", req.body);
+      console.log("hostname->",req.hostname,"ip->",req.ip,"REQ BODY FROM WEBHOOK", req.body);
       global_connection_status = req.body["state"];
       if (global_connection_status === "active") {
         global_connection_id = req.body["connection_id"];

@@ -1,5 +1,6 @@
 const axios = require("axios");
 const url = "http://127.0.0.1:8021";
+const my_server = "http://127.0.0.1:3000";
 
 exports.getAllSchemas = async (req, res) => {
   try {
@@ -31,14 +32,28 @@ exports.postSchema = async (req, res) => {
     let attr = req.body.attributes.split(",");
     // remove white trailing white spaces
     attr = attr.map((e) => e.trim());
-    const data = {
+    let data = {
       attributes: attr,
       schema_name: req.body.schema_name,
       schema_version: "1.0",
     };
-    console.log(data);
 
-    const response = await axios.post(url + "/schemas", data, {
+    let response = await axios.post(url + "/schemas", data, {
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    response = await axios.get(my_server + "/schemas");
+    // Filtering out the credential definition ID with the same tag as schema name
+    const filteredSchemaId = response.data.find((schema) => {
+    return schema.name === req.body.schema_name 
+    });
+    data = {
+      schema_id: filteredSchemaId.id,
+      tag: req.body.schema_name,
+    };
+    response = await axios.post(url + "/credential-definitions", data, {
       headers: {
         accept: "application/json",
         "Content-Type": "application/json",

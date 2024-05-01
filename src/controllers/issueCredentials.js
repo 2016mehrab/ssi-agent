@@ -82,6 +82,81 @@ exports.postIssueCredentialV1 = async (req, res) => {
   }
 };
 
+exports.postIssueCredentialDynamic = async (req, res) => {
+  try {
+    let response;
+    const id = uuidv4();
+    console.log(req.originalUrl, " request body -> ", req.body);
+
+    // Fetching connection info
+    response = await axios.get(`${my_server}/set-connectionid`);
+    console.log("response body -> ", response.data);
+    if (!response.data.success) throw new Error(response.data.error);
+
+    // Fetching credential definitions
+    response = await axios.get(
+      "http://localhost:8021/credential-definitions/created?schema_id=" +
+        encodeURIComponent(req.body.schema_id)
+    );
+
+    const schemaIdParts = req.body.schema_id.split(":");
+    const reqSchemaIdLastPart = schemaIdParts[schemaIdParts.length - 2];
+
+    // Filtering out the credential definition ID with the same tag as schema name
+    const filteredCredentialId = response.data.credential_definition_ids.find(
+      (id) => {
+        const idParts = id.split(":");
+        const lastPart = idParts[idParts.length - 1];
+        return lastPart.toLowerCase() === reqSchemaIdLastPart.toLowerCase();
+      }
+    );
+
+    let {schema_id ,...attr } = req.body;
+    attr = Object.entries(attr).map(([k, v]) => ({
+      name: k,
+      value: v,
+    }));
+
+    attr.push({ name: "Id", value: id });
+    console.log("attr", attr);
+    let data = {
+      auto_issue: true,
+      auto_remove: false,
+      comment: "string",
+      connection_id: global_connection_id,
+      credential_preview: {
+        "@type": "issue-credential/2.0/credential-preview",
+        attributes: [...attr],
+      },
+      filter: {
+        indy: {
+          cred_def_id: filteredCredentialId,
+          issuer_did: schemaIdParts[0],
+          schema_id: req.body.schema_id,
+          schema_issuer_did: schemaIdParts[0],
+          schema_name: schemaIdParts[schemaIdParts.length - 2],
+          schema_version: "1.0",
+        },
+      },
+      //   replacement_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      trace: true,
+    };
+
+    console.log("Data", data);
+    response = await axios.post(url + "/issue-credential-2.0/send-offer", data, {
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    res.render("waiting.pug");
+  } catch (error) {
+    console.error(req.originalUrl, " -> ", error.message);
+    res.status(500).render("error.pug");
+  }
+};
+
 // VERSION 2.0
 // TODO : Proper redirection
 exports.postIssueCredential = async (req, res) => {
@@ -124,11 +199,11 @@ exports.postIssueCredential = async (req, res) => {
       },
       filter: {
         indy: {
-          cred_def_id:"VGXTHfUFKGWbnm4jkvaWCC:3:CL:507163:VC",
+          cred_def_id: "VGXTHfUFKGWbnm4jkvaWCC:3:CL:507163:VC",
           issuer_did: "VGXTHfUFKGWbnm4jkvaWCC",
-          schema_id:"VGXTHfUFKGWbnm4jkvaWCC:2:FEDERATION:1.0",
-          schema_issuer_did:"VGXTHfUFKGWbnm4jkvaWCC" ,
-          schema_name:"FEDERATION" ,
+          schema_id: "VGXTHfUFKGWbnm4jkvaWCC:2:FEDERATION:1.0",
+          schema_issuer_did: "VGXTHfUFKGWbnm4jkvaWCC",
+          schema_name: "FEDERATION",
           schema_version: "1.0",
         },
       },

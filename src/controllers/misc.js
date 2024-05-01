@@ -153,6 +153,20 @@ exports.getConnectionInfo = async (req, res) => {
   }
 };
 
+exports.setConnectionId = async (req, res) => {
+  try {
+    const connectionsResponse =await axios.get(`${my_server}/connections`);
+    const connectionsData = connectionsResponse.data;
+    if (connectionsData?.results?.length > 0) {
+      global_connection_id = connectionsData.results[0].connection_id;
+      res.status(200).json({ success: true });
+    }
+    else throw new Error("Error setting global connectionId")
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.setGlobals = async (req, res) => {
   try {
     // Make requests in parallel
@@ -197,3 +211,4 @@ exports.setGlobals = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
