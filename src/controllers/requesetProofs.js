@@ -26,19 +26,9 @@ exports.getProofRecords = async (req, res) => {
 
 exports.requestProof = async (req, res) => {
   let response;
-  try {
-    response = await axios.get(my_server + "/connections");
-
-    // res.status(200).json(data);
-  } catch (e) {
-    // res.status(500).json({ message: "problem while getting connections" });
-    res.status(500).json({ message: e.message });
-  }
-  // TODO: fix replacement_id & connection_id
   console.log("attr_val", req.body.attr_val);
 
   let data = {
-    // connection_id: response.data.results[0].connection_id,
     connection_id: global_connection_id,
     trace: true,
     proof_request: {
@@ -55,15 +45,7 @@ exports.requestProof = async (req, res) => {
           ],
         },
       },
-      requested_predicates: {
-        // additionalProp1: {
-        //   name: req.body.attr_name,
-        //   value: req.body.attr_val,
-        //   p_type: ">=",
-        //   p_value:req.body.attr_val ,
-        // restriction: [{}],
-        // },
-      },
+      requested_predicates: {},
     },
   };
 
@@ -76,6 +58,66 @@ exports.requestProof = async (req, res) => {
     });
 
     res.status(200).json(response.data);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+//  TODO: Set connection id
+//  TODO: check if schema_id properly works 
+//  TODO: consider setting global schema def
+//  TODO: Send the request
+
+exports.requestProofV2 = async (req, res) => {
+  let response;
+  let attrs = req.body.attributes.split(",");
+  // remove white trailing white spaces
+  attrs = attrs.map((e) => e.trim());
+
+  let data = {
+    connection_id: global_connection_id,
+    trace: true,
+    presentation_request: {
+      indy: {
+        name: "Prove Your Age",
+        version: "1.0",
+        requested_attributes: {
+          Info: {
+            names: [attrs],
+            restrictions: [
+              {
+                schema_id: req.body.schema_id,
+              },
+            ],
+          },
+        },
+        requested_predicates: {
+          Above: {
+            name: "Age",
+            p_type: ">=",
+            p_value: req.body.age,
+            restrictions: [
+              {
+                schema_id: req.body.schema_id,
+              },
+            ],
+          },
+        },
+      },
+    },
+  };
+  try {
+    // response = await axios.post(url + "/present-proof-2.0/send-request", data, {
+    //   headers: {
+    //     accept: "application/json",
+    //     "Content-Type": "application/json",
+    //   },
+    // });
+    console.log("REQ BODY", req.body);
+    console.log("Attrs", attrs);
+    console.log("CONSTR DATA", data);
+
+    res.status(200).render("waiting.pug");
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

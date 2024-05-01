@@ -22,6 +22,7 @@ const {
   getAllPresentProofs,
   postPresentProof,
   deleteAllPresentProofs,
+
 } = require("../controllers/presentProofs.js");
 
 const {
@@ -32,6 +33,7 @@ const {
   getProofRecords,
   requestProof,
   deleteProofRecords,
+  requestProofV2
 } = require("../controllers/requesetProofs.js");
 
 const {
@@ -92,6 +94,11 @@ const routes = (app) => {
     .get(getProofRecords)
     .post(requestProof)
     .delete(deleteProofRecords);
+  app
+    .route("/request-proof-v2")
+    .get(getProofRecords)
+    .post(requestProofV2)
+    .delete(deleteProofRecords);
 
   app.route("/send-proof").post(sendProof);
   app.route("/verify").post(verify);
@@ -131,6 +138,7 @@ const routes = (app) => {
       let selected_schema = schemas.filter(
         (schema) => schema.id === req.body.schema_id
       )[0];
+      global_schema_def = selected_schema.id;
       res
         .status(200)
         .render("issue_credential.pug", {
@@ -144,7 +152,6 @@ const routes = (app) => {
   });
 
   app.route("/select_schema").get(async (req, res) => {
-    // TODO: cleanup
     try {
       let response = await axios.get(my_server + "/schemas");
       res
@@ -156,6 +163,17 @@ const routes = (app) => {
     }
   });
 
+  app.route("/request_proofs").get(async (req, res) => {
+    try {
+      let response = await axios.get(my_server + "/schemas");
+      res
+        .status(200)
+        .render("request_proofs.pug", { schema_names: response.data });
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  });
 
   app.route("/agent_info_page").get(async (req, res) => {
     try {
