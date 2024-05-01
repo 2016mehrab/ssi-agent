@@ -123,6 +123,7 @@ const routes = (app) => {
     }
   });
 
+  // comes submit req from select_schema.pug 
   app.route("/get-credential").post(async(req, res) => {
     try {
       let response = await axios.get(my_server + "/schemas");
