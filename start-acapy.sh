@@ -39,6 +39,9 @@ CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --debug-credentials \
    --debug-webhooks \
    --auto-verify-presentation \
+   --auto-accept-intro-invitation-requests \
+   --public-invites \
+   --log-file 'acapylog.txt'\
    --debug-connections"
 
 # Print the command
