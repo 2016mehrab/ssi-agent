@@ -5,7 +5,7 @@ MAINTAINER ESHAN_SSI
 RUN apt-get update
 
 # Install software
-RUN apt-get install -y nodejs vim curl python3 python3-pip npm jq
+RUN apt-get install -y nodejs vim curl python3 python3-pip npm jq git
 
 # Install ngrok
 RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && apt-get update && apt-get install -y ngrok

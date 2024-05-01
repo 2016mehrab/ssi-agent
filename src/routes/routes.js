@@ -43,7 +43,7 @@ const {
   sendProof,
   verify,
   publicDid,
-  setConnectionId
+  setConnectionId,
 } = require("../controllers/misc.js");
 
 const ConnectionModel = require("../models/Connection.js");
@@ -123,21 +123,25 @@ const routes = (app) => {
     }
   });
 
-  // comes submit req from select_schema.pug 
-  app.route("/get-credential").post(async(req, res) => {
+  // comes submit req from select_schema.pug
+  app.route("/get-credential").post(async (req, res) => {
     try {
       let response = await axios.get(my_server + "/schemas");
       const schemas = response.data;
       let selected_schema = schemas.filter(
         (schema) => schema.id === req.body.schema_id
       )[0];
-      res.status(200).render("issue_credential.pug", {schema_id:selected_schema.id,attrs:selected_schema.attrNames});
+      res
+        .status(200)
+        .render("issue_credential.pug", {
+          schema_id: selected_schema.id,
+          attrs: selected_schema.attrNames,
+        });
     } catch (e) {
-      console.log(req.originalUrl+" -> " +e.message);
+      console.log(req.originalUrl + " -> " + e.message);
       res.status(500).render("error.pug");
     }
   });
-
 
   app.route("/select_schema").get(async (req, res) => {
     // TODO: cleanup
@@ -152,21 +156,6 @@ const routes = (app) => {
     }
   });
 
-  // app.route("/issue_cred_page").get(async (req, res) => {
-  //   try {
-  //     let response = await axios.get(my_server + "/schemas");
-  //     const schemas = response.data;
-  //     let federationSchema = schemas.filter(
-  //       (schema) => schema.name === "FEDERATION"
-  //     )[0];
-  //     res
-  //       .status(200)
-  //       .render("issue_credential.pug", { attrs: federationSchema.attrNames });
-  //   } catch (e) {
-  //     console.log(e.message);
-  //     res.status(500).render("error.pug");
-  //   }
-  // });
 
   app.route("/agent_info_page").get(async (req, res) => {
     try {
@@ -211,6 +200,9 @@ const routes = (app) => {
   app.route("/mobile-agent-connection-invitation").get(async (req, res) => {
     res.status(200).render("invitation.pug");
   });
+  app.route("/credential_received").get(async (req, res) => {
+    res.status(200).render("credential_received.pug");
+  });
   app.route("/mobile-agent-connection").get(async (req, res) => {
     res.status(200).render("qrcode", qr_data);
   });
@@ -223,7 +215,14 @@ const routes = (app) => {
     })
 
     .post(async (req, res) => {
-      console.log("hostname->",req.hostname,"ip->",req.ip,"REQ BODY FROM WEBHOOK", req.body);
+      console.log(
+        "hostname->",
+        req.hostname,
+        "ip->",
+        req.ip,
+        "REQ BODY FROM WEBHOOK",
+        req.body
+      );
       global_connection_status = req.body["state"];
       if (global_connection_status === "active") {
         global_connection_id = req.body["connection_id"];
@@ -244,6 +243,9 @@ const routes = (app) => {
       }
 
       if (global_connection_id) {
+        if (req.body["state"] === "done") {
+          console.log("Credential Issued!");
+        }
         if (req.body["state"] === "credential_acked") {
           console.log("Credential acked...");
           global_credential_status = true;
