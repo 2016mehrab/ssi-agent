@@ -18,8 +18,8 @@ CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --wallet-type askar \
    --wallet-name IDPWallet \
    --wallet-key idpsecret \
+   --wallet-storage-type default \
    --preserve-exchange-records \
-   --auto-provision \
    --genesis-url http://test.bcovrin.vonx.io/genesis \
    --trace-target log \
    --seed Mehrab00000000000000000000000000 \
@@ -42,7 +42,7 @@ CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --debug-connections"
 
 # Print the command
-echo "Running command: $CMD"
+echo -e "Running command: $CMD"
 
 # Execute the command
 eval $CMD
