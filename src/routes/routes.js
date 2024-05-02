@@ -22,7 +22,6 @@ const {
   getAllPresentProofs,
   postPresentProof,
   deleteAllPresentProofs,
-
 } = require("../controllers/presentProofs.js");
 
 const {
@@ -33,7 +32,7 @@ const {
   getProofRecords,
   requestProof,
   deleteProofRecords,
-  requestProofV2
+  requestProofV2,
 } = require("../controllers/requesetProofs.js");
 
 const {
@@ -139,12 +138,10 @@ const routes = (app) => {
         (schema) => schema.id === req.body.schema_id
       )[0];
       global_schema_def = selected_schema.id;
-      res
-        .status(200)
-        .render("issue_credential.pug", {
-          schema_id: selected_schema.id,
-          attrs: selected_schema.attrNames,
-        });
+      res.status(200).render("issue_credential.pug", {
+        schema_id: selected_schema.id,
+        attrs: selected_schema.attrNames,
+      });
     } catch (e) {
       console.log(req.originalUrl + " -> " + e.message);
       res.status(500).render("error.pug");
@@ -164,8 +161,12 @@ const routes = (app) => {
   });
 
   app.route("/request_proofs").get(async (req, res) => {
+    let response;
     try {
-      let response = await axios.get(my_server + "/schemas");
+      response = await axios.get(my_server + "/set-connectionid");
+      if (!response.data.success) throw new Error("Failed to set globals");
+
+      response = await axios.get(my_server + "/schemas");
       res
         .status(200)
         .render("request_proofs.pug", { schema_names: response.data });

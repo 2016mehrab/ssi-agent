@@ -64,7 +64,8 @@ exports.requestProof = async (req, res) => {
 };
 
 //  TODO: Set connection id
-//  TODO: check if schema_id properly works 
+//  TODO: check if schema_id properly works
+//  TODO: consider adding deleting v2 proof records
 //  TODO: consider setting global schema def
 //  TODO: Send the request
 
@@ -83,7 +84,7 @@ exports.requestProofV2 = async (req, res) => {
         version: "1.0",
         requested_attributes: {
           Info: {
-            names: [attrs],
+            names: [...attrs],
             restrictions: [
               {
                 schema_id: req.body.schema_id,
@@ -95,7 +96,7 @@ exports.requestProofV2 = async (req, res) => {
           Above: {
             name: "Age",
             p_type: ">=",
-            p_value: req.body.age,
+            p_value: parseInt(req.body.age),
             restrictions: [
               {
                 schema_id: req.body.schema_id,
@@ -106,16 +107,17 @@ exports.requestProofV2 = async (req, res) => {
       },
     },
   };
+
+  console.log("REQ BODY", req.body);
+  console.log("Attrs", attrs);
+  console.log("CONSTR DATA", JSON.stringify(data));
   try {
-    // response = await axios.post(url + "/present-proof-2.0/send-request", data, {
-    //   headers: {
-    //     accept: "application/json",
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-    console.log("REQ BODY", req.body);
-    console.log("Attrs", attrs);
-    console.log("CONSTR DATA", data);
+    response = await axios.post(url + "/present-proof-2.0/send-request", data, {
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
 
     res.status(200).render("waiting.pug");
   } catch (e) {
