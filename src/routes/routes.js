@@ -235,68 +235,13 @@ const routes = (app) => {
 
     .post(async (req, res) => {
       console.log(
-        "hostname->",
+        "hostname ->",
         req.hostname,
         "ip->",
         req.ip,
-        "REQ BODY FROM WEBHOOK",
+        " ->",
         req.body
       );
-      global_connection_status = req.body["state"];
-      if (global_connection_status === "active") {
-        global_connection_id = req.body["connection_id"];
-        try {
-          const connection = await ConnectionModel.create({
-            alias: req.body["alias"],
-            connectionId: req.body["connection_id"],
-          });
-          res.cookie("connectionId", req.body["connection_id"]);
-        } catch (error) {
-          console.log(
-            "Failed to create db entry for connection",
-            error.message
-          );
-        }
-        console.log("Connction status->", global_connection_status);
-        console.log("Connection Complete!");
-      }
-
-      if (global_connection_id) {
-        if (req.body["state"] === "done") {
-          console.log("Credential Issued!");
-        }
-        if (req.body["state"] === "credential_acked") {
-          console.log("Credential acked...");
-          global_credential_status = true;
-          // req.session.credStatus = true
-        }
-
-        if (req.body["verified"] === "true") {
-          console.log("Credential Being Verified");
-
-          // TODO : need to make it compatible with version 2
-          var base64data = JSON.stringify(
-            req.body["presentation_request_dict"][
-              "request_presentations~attach"
-            ][0]["data"]["base64"]
-          );
-
-          // converting to buffer string from base64
-          const decodedString = Buffer.from(base64data, "base64");
-          // console.log("decodedString- ",decodedString);
-
-          // convert it to regular string
-          const jsonData = JSON.parse(decodedString.toString());
-          console.log("jsonData- ", jsonData);
-          // proofStatus = true;
-          // retrievedAttribute =
-          //   jsonData["requested_attributes"]["0_role"]["value"];
-          // req.session.credStatus = true
-        } else {
-        }
-      } else {
-        console.log("No connection id");
-      }
     });
 };
 export default routes;
