@@ -4,4 +4,4 @@ SSIVENV/
 acapylog.txt
 acapyvenv/
 *.q
-.env
+*.env
