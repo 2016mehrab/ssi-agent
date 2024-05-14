@@ -1,5 +1,5 @@
 const url = "http://127.0.0.1:8021";
-const my_server = "http://127.0.0.1:3000";
+const my_server = process.env.MY_SERVER;
 const ngrok_url = "http://127.0.0.1:4040/api/tunnels";
 const axios = require("axios");
 
@@ -121,6 +121,26 @@ exports.publicDid = async (req, res) => {
     res.status(200).json(response.data.result);
   } catch (e) {
     res.status(500).json({ message: e.message });
+  }
+};
+
+exports.resolvePublicDid = async (req, res) => {
+  let response;
+  try {
+
+    const did_param = encodeURIComponent("did:sov:"+req.query.did) ;
+    let constructed_url = url + "/resolver/resolve/" +  did_param;
+    console.log(constructed_url);
+    response = await axios.get(constructed_url);
+
+    if (response.status === 200) {
+      res.status(200).json({ success: true });
+    } else {
+      throw new Error("DID does not exist!");
+    }
+  } catch (e) {
+    console.error(e.message);
+    res.status(500).json({ success: false });
   }
 };
 

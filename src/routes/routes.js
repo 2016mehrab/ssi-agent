@@ -1,5 +1,5 @@
 const axios = require("axios");
-const my_server = "http://127.0.0.1:3000";
+const my_server = process.env.MY_SERVER;
 const { generateQRcode } = require("../controllers/mobileAgentConnections.js");
 const {
   createConnection,
@@ -45,6 +45,7 @@ const {
   verify,
   publicDid,
   setConnectionId,
+  resolvePublicDid
 } = require("../controllers/misc.js");
 
 const ConnectionModel = require("../models/Connection.js");
@@ -102,6 +103,7 @@ const routes = (app) => {
   app.route("/send-proof").post(sendProof);
   app.route("/verify").post(verify);
   app.route("/public-did").get(publicDid);
+  app.route("/resolve-did").get(resolvePublicDid);
 
   app.route("/credentials").get(getAllCredentials).delete(deleteAllCredentials);
   app.route("/status").get(getConnectionStatus);

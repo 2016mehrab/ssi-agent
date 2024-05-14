@@ -5,7 +5,7 @@ import path from "path";
 
 const mongoose = require("mongoose");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT;
 // Set the view engine to Pug
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));

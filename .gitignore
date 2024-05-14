@@ -3,3 +3,5 @@ node_modules/
 SSIVENV/
 acapylog.txt
 acapyvenv/
+*.q
+.env
