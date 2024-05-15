@@ -1,3 +1,4 @@
+require("dotenv").config()
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const ngrok_url = "http://127.0.0.1:4040/api/tunnels";

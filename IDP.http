@@ -1,5 +1,5 @@
 @url = http://127.0.0.1:8021
-@controller = http://127.0.0.1:3000
+@controller = http://127.0.0.1:3002
 ###
 GET {{controller}}/connections
 ###
@@ -22,4 +22,6 @@ GET {{controller}}/webhooks/
 GET {{controller}}/credential-definitions
 ###
 GET {{controller}}/issue-credential
+###
+DELETE {{controller}}/request-proof-v2
 ###

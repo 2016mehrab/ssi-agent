@@ -1,3 +1,4 @@
+require('dotenv').config()
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const { generateQRcode } = require("../controllers/mobileAgentConnections.js");
@@ -98,7 +99,7 @@ const routes = (app) => {
     .route("/request-proof-v2")
     .get(getProofRecords)
     .post(requestProofV2)
-    .delete(deleteProofRecords);
+    .delete(deleteAllPresentProofs);
 
   app.route("/send-proof").post(sendProof);
   app.route("/verify").post(verify);
@@ -180,6 +181,7 @@ const routes = (app) => {
 
   app.route("/agent_info_page").get(async (req, res) => {
     try {
+      console.log("my_server", my_server)
       let response = await axios.get(my_server + "/schemas");
       const schemas = response.data;
       response = await axios.get(my_server + "/credential-definitions");

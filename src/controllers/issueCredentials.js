@@ -1,3 +1,6 @@
+require("dotenv").config()
+
+
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const { v4: uuidv4 } = require("uuid");
