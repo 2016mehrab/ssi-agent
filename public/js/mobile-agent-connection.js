@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function executeQuery() {
   var id = document.getElementById("connection_id").textContent.trim();
   id += "";
-  fetch("/status")
+  fetch("/connection-status")
     .then((r) => r.text())
     .then((data) => {
       console.log("ID: " + id);

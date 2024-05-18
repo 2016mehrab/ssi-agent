@@ -6,7 +6,6 @@ const routes = require("./src/routes/routes.js");
 const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT;
-const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const config = require("./config/index.js");
@@ -17,20 +16,22 @@ app.use(express.static("public"));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: "SERVICE_PROVIDER_SECRET",
     resave: true,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: config.mongodb.url}),
+    store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 180 }),
+    cookie: {
+      maxAge: 3 * 60 * 1000, 
+    },
   })
 );
 
-routes(app);
+
+app.use(routes);
 
 app.get("/", (req, res) => {
-  console.log("visits", req.session.visits);
   res.render("home");
 });
 
