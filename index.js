@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: "SERVICE_PROVIDER_SECRET",
+    secret: process.env.IDP_SECRET,
     resave: true,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 180 }),

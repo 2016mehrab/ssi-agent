@@ -1,3 +1,4 @@
-MONGO_URI = mongodb+srv://username:password@cluster0.fykfvlp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+MONGO_URI = mongodb+srv://username:password@cluster0.fykfvlp.mongodb.net/idp-user-profiles?retryWrites=true&w=majority&appName=Cluster0
 MY_SERVER = "http://127.0.0.1:3002"
 PORT = 3002
+IDP_SECRET="SERVICE_PROVIDER_SECRET"
