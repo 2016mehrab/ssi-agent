@@ -3,6 +3,7 @@ const router = express.Router();
 require("dotenv").config();
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
+const ReferenceService = require("../services/referenceService.js");
 
 const {
   generateQRcode,
@@ -250,6 +251,113 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
   res.status(200).render("qrcode", qr_data);
 });
 /*                                 page render                                 */
+
+router
+  .route("/references")
+  .get(async (req, res) => {
+    try {
+      const references = await ReferenceService.getAll();
+      res.render("reference-list.pug", { references, title: "References" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      console.log("REQ BODY", req.body);
+
+      const reference = await ReferenceService.create({
+        reference: req.body.refr,
+        isAdded: false,
+        domain: req.body.domain,
+        organization: req.body.org,
+      });
+      res.status(201).json({ success: true });
+    } catch (e) {
+      console.error(e);
+      res.status(400).json({ success: false });
+    }
+  });
+
+router
+  .route("/form")
+  .get(async (req, res) => {
+    try {
+      res.render("reference-form.pug", { title: "Reference Form" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
+    }
+  });
+
+router.route("/add-org").get(async (req, res) => {
+  try {
+    res.render("reference-check.pug", { title: "Add To Registry" });
+  } catch (e) {
+    res.render("error", { message: e.message, error: e });
+  }
+});
+
+router.route("/exists").post(async (req, res) => {
+  try {
+    const doc = await ReferenceService.getModelByReference(req.body.refr);
+    console.info("DOC->", doc);
+    if (!doc) throw new Error("Reference doesn't exist!");
+    const constructed_url =
+      process.env.AGENT_CONTROLLER + "/resolve-did?did=" + req.body.did;
+    let response = await axios.get(constructed_url);
+    let data = {
+      refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
+      did: process.env.DID,
+    };
+    // send acknowledge to the other party
+
+    response = await axios.post(
+      doc.domain + "/federation-entry-acknowledgement",
+      data
+    );
+    if (!response.success) throw new Error("Failed to get acknowledgement!");
+    data = {
+      domain: doc.domain,
+      org: doc.organization,
+      did: req.body.did,
+    };
+
+    response = await axios.post(process.env.FABRIC, data);
+    res.status(201).json({ success: true });
+  } catch (e) {
+    console.error(e.message);
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+// no frontend
+router.route("/federation-entry-acknowledgement").post(async (req, res) => {
+  try {
+    const doc = await ReferenceService.getModelByReference(req.body.refr);
+    if (!doc) throw new Error("Reference doesn't exist!");
+    if (doc.isAdded) {
+      res.status(201).json({ success: true });
+    } else {
+      // resolving DID
+      const constructed_url =
+        process.env.AGENT_CONTROLLER + "/resolve-did?did=" + req.body.did;
+      let response = await axios.get(constructed_url);
+      let data = {
+        domain: doc.domain,
+        org: doc.domain,
+        did: req.body.did,
+      };
+      response = await axios.post(process.env.FABRIC, data);
+      updateIsAdded = await ReferenceService.updateIsAdded(req.body.refr);
+      res.status(201).json({ success: true });
+    }
+  } catch (e) {
+    console.error(e.message);
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+/*                                 BASIC IDP                                 */
 
 router
   .route("/webhooks/*")

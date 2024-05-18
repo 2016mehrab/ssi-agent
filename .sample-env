@@ -2,3 +2,5 @@ MONGO_URI = mongodb+srv://username:password@cluster0.fykfvlp.mongodb.net/idp-use
 MY_SERVER = "http://127.0.0.1:3002"
 PORT = 3002
 IDP_SECRET="SERVICE_PROVIDER_SECRET"
+AGENT_CONTROLLER="http://127.0.0.1:3002"
+FABRIC="http://127.0.0.1:3000/create"
