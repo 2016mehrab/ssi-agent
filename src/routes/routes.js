@@ -184,13 +184,16 @@ router.route("/select_schema").get(async (req, res) => {
 router.route("/request_proofs").get(async (req, res) => {
   let response;
   try {
-    response = await axios.get(my_server + "/set-connectionid");
-    if (!response.data.success) throw new Error("Failed to set globals");
+    if (!req.session.connection_id) {
+      res.redirect("/login-page");
+    } else {
+      global_connection_id = req.session.connection_id;
 
-    response = await axios.get(my_server + "/schemas");
-    res
-      .status(200)
-      .render("request_proofs.pug", { schema_names: response.data });
+      response = await axios.get(my_server + "/schemas");
+      res
+        .status(200)
+        .render("request_proofs.pug", { schema_names: response.data });
+    }
   } catch (e) {
     console.log(e.message);
     res.status(500).render("error.pug");

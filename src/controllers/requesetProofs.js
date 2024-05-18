@@ -28,8 +28,12 @@ exports.getProofRecords = async (req, res) => {
 
 exports.requestProof = async (req, res) => {
   let response;
-  response = await axios.get(my_server + "/set-connectionid");
+  // response = await axios.get(my_server + "/set-connectionid");
   let attrs = req.body.attributes.split(",");
+  if(!req.session.connection_id){
+    res.redirect("/login-page");
+  }
+
   attrs = attrs.map((e) => e.trim());
   console.info("REQUEST BODY", req.body);
   const { schema_id, attributes } = req.body;
@@ -51,7 +55,7 @@ exports.requestProof = async (req, res) => {
   });
 
   let data = {
-    connection_id: global_connection_id,
+    connection_id: req.session.connection_id,
     trace: true,
     proof_request: {
       name: "Prove to IDP",

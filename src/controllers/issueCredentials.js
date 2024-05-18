@@ -91,10 +91,12 @@ exports.postIssueCredentialDynamic = async (req, res) => {
     const id = uuidv4();
     console.log(req.originalUrl, " request body -> ", req.body);
 
-    // Fetching connection info
-    response = await axios.get(`${my_server}/set-connectionid`);
-    console.log("response body -> ", response.data);
-    if (!response.data.success) throw new Error(response.data.error);
+    console.log("connection session", req.session.connection_id)
+    console.log("connection global", global_connection_id)
+    // setting global connection_id
+    // response = await axios.get(`${my_server}/set-connectionid`);
+    // console.log("response body -> ", response.data);
+    // if (!response.data.success) throw new Error(response.data.error);
 
     // Fetching credential definitions
     response = await axios.get(
@@ -126,7 +128,7 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       auto_issue: true,
       auto_remove: false,
       comment: "string",
-      connection_id: global_connection_id,
+      connection_id: req.session.connection_id,
       credential_preview: {
         "@type": "issue-credential/2.0/credential-preview",
         attributes: [...attr],

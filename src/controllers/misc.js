@@ -1,4 +1,4 @@
-require("dotenv").config()
+require("dotenv").config();
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const ngrok_url = "http://127.0.0.1:4040/api/tunnels";
@@ -128,9 +128,8 @@ exports.publicDid = async (req, res) => {
 exports.resolvePublicDid = async (req, res) => {
   let response;
   try {
-
-    const did_param = encodeURIComponent("did:sov:"+req.query.did) ;
-    let constructed_url = url + "/resolver/resolve/" +  did_param;
+    const did_param = encodeURIComponent("did:sov:" + req.query.did);
+    let constructed_url = url + "/resolver/resolve/" + did_param;
     console.log(constructed_url);
     response = await axios.get(constructed_url);
 
@@ -177,14 +176,10 @@ exports.getConnectionInfo = async (req, res) => {
 
 exports.setConnectionId = async (req, res) => {
   try {
-    const connectionsResponse = await axios.get(`${my_server}/connections`);
-    const connectionsData = connectionsResponse.data;
-    if (connectionsData?.results?.length > 0) {
-      // global_connection_id = connectionsData.results[0].connection_id;
-      global_connection_id = req.session.connection_id;
-      console.log("Global ConnectionId set", global_connection_id);
-      res.status(200).json({ success: true });
-    } else throw new Error("Error setting global connectionId");
+    global_connection_id = req.session.connection_id;
+    console.log("Global ConnectionId set", global_connection_id);
+    console.log("session connectionId set", req.session.connection_id);
+    res.status(200).json({ success: true });
   } catch (error) {
     console.error(error.message, "-> ", req.originalUrl);
     res.status(500).json({ success: false, error: error.message });

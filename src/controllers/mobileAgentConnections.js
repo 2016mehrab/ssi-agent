@@ -52,6 +52,7 @@ exports.reconnectWithEmail = async (req, res) => {
       throw new Error("User with this email already exists");
     }
     req.session.connection_id = existingUser.connectionId;
+    console.log("session cid",req.session.connection_id)
     global_connection_id = existingUser.connectionId;
 
     res.redirect("/request_proofs");
