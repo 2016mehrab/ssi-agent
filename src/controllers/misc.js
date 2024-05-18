@@ -146,9 +146,10 @@ exports.resolvePublicDid = async (req, res) => {
 };
 
 exports.getConnectionStatus = async (req, res) => {
-  if (global_connection_status === null) {
+  if (global_connection_id === null) {
     res.status(200).json(null);
   } else {
+    res.session.connection_id = global_connection_id;
     res.status(200).json(global_connection_id);
   }
 };
