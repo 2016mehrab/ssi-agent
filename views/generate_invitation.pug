@@ -9,7 +9,10 @@ block content
       fieldset 
         legend Generate Invitation
         div(class="form-group")
-          label(for='memName') Please enter a connection-alias:
-          input(type='text' name='connection_alias' id='memName' placeholder='text')
+          label(for='email') Email:
+          input(type='text' name='email' id='email' placeholder='Enter your email')
+        div(class="form-group")
+          label(for='alias') Alias:
+          input(type='text' name='alias' id='alias' placeholder='Enter an alias for this site')
         div(class="form-group")
           input(type="submit" value="Submit")

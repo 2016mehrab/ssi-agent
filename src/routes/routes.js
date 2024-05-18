@@ -49,7 +49,7 @@ const {
   resolvePublicDid
 } = require("../controllers/misc.js");
 
-const ConnectionModel = require("../models/Connection.js");
+const User= require("../models/User.js");
 
 /* GLOBAL */
 global.global_issuer_did = null;
@@ -181,7 +181,6 @@ const routes = (app) => {
 
   app.route("/agent_info_page").get(async (req, res) => {
     try {
-      console.log("my_server", my_server)
       let response = await axios.get(my_server + "/schemas");
       const schemas = response.data;
       response = await axios.get(my_server + "/credential-definitions");
@@ -238,6 +237,13 @@ const routes = (app) => {
     })
 
     .post(async (req, res) => {
+      const connection_state= req.body["connection_state"];
+      const {rfc23_state}= req.body;
+      console.log("RFC23_state", rfc23_state);
+      if(connection_state==='active' && rfc23_state==='completed'){
+        req.session.connection_id= req.body["connection_id"];
+        global_connection_id =  req.body["connection_id"];
+      }
       console.log(
         "hostname ->",
         req.hostname,
@@ -248,6 +254,7 @@ const routes = (app) => {
       );
     });
 };
-export default routes;
+// export default routes;
+module.exports = routes;
 
 // TODO : cookie based session management.

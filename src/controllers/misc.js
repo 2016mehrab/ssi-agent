@@ -179,7 +179,8 @@ exports.setConnectionId = async (req, res) => {
     const connectionsResponse = await axios.get(`${my_server}/connections`);
     const connectionsData = connectionsResponse.data;
     if (connectionsData?.results?.length > 0) {
-      global_connection_id = connectionsData.results[0].connection_id;
+      // global_connection_id = connectionsData.results[0].connection_id;
+      global_connection_id = req.session.connection_id;
       console.log("Global ConnectionId set", global_connection_id);
       res.status(200).json({ success: true });
     } else throw new Error("Error setting global connectionId");
