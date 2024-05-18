@@ -1,4 +1,4 @@
-require('dotenv').config()
+require("dotenv").config();
 
 const axios = require("axios");
 const url = "http://127.0.0.1:8021";
@@ -28,7 +28,27 @@ exports.getProofRecords = async (req, res) => {
 
 exports.requestProof = async (req, res) => {
   let response;
-  console.log("attr_val", req.body.attr_val);
+  response = await axios.get(my_server + "/set-connectionid");
+  let attrs = req.body.attributes.split(",");
+  attrs = attrs.map((e) => e.trim());
+  console.info("REQUEST BODY", req.body);
+  const { schema_id, attributes } = req.body;
+
+  // Step 2: Split the attributes string into an array
+  const attributesArray = attributes.split(", ").map((attr) => attr.trim());
+
+  // Step 3: Create an object for each attribute
+  let requestedAttributes = {};
+  attributesArray.forEach((attribute) => {
+    requestedAttributes[attribute] = {
+      name: attribute,
+      restrictions: [
+        {
+          schema_id: schema_id,
+        },
+      ],
+    };
+  });
 
   let data = {
     connection_id: global_connection_id,
@@ -36,17 +56,8 @@ exports.requestProof = async (req, res) => {
     proof_request: {
       name: "Prove to IDP",
       version: "1.0",
-      requested_attributes: {
-        additionalProp1: {
-          name: req.body.attr_name,
-          value: req.body.attr_val,
-          restriction: [
-            {
-              schema_name: req.body.schema_name,
-            },
-          ],
-        },
-      },
+
+      requested_attributes: requestedAttributes,
       requested_predicates: {},
     },
   };
@@ -59,7 +70,7 @@ exports.requestProof = async (req, res) => {
       },
     });
 
-    res.status(200).json(response.data);
+    res.status(200).render("waiting.pug");
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -73,10 +84,12 @@ exports.requestProof = async (req, res) => {
 
 exports.requestProofV2 = async (req, res) => {
   let response;
+  response = await axios.get(my_server + "/set-connectionid");
   let attrs = req.body.attributes.split(",");
   // remove white trailing white spaces
   attrs = attrs.map((e) => e.trim());
 
+  console.info("REQUEST BODY", req.body);
   let data = {
     connection_id: global_connection_id,
     trace: true,

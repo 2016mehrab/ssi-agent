@@ -9,7 +9,7 @@ GET {{controller}}/status
 ###
 GET {{controller}}/connection-info
 ###
-GET {{controller}}/set-globals
+GET {{controller}}/set-connectionid
 ###
 DELETE {{controller}}/connections
 ###
@@ -22,6 +22,8 @@ GET {{controller}}/webhooks/
 GET {{controller}}/credential-definitions
 ###
 GET {{controller}}/issue-credential
+###
+DELETE {{controller}}/request-proof-v1
 ###
 DELETE {{controller}}/request-proof-v2
 ###
