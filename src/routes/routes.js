@@ -4,6 +4,7 @@ require("dotenv").config();
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
+const { isAuthenticated } = require("../middlewares/auth-middleware.js");
 
 const {
   generateQRcode,
@@ -252,6 +253,41 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 });
 /*                                 page render                                 */
 
+/*                                 BASIC SP                                 */
+// app.get("/signup_with_idp", function (req, res) {
+//   res.render("signup_with_idp.pug");
+// });
+// app.get("/service", isAuthenticated, function (req, res) {
+//   res.render("service.pug", { user: req.session.user.user_email });
+// });
+// app.post("/redirect", (req, res) => {
+//   // Redirect to App 3003's specific route
+//   if (req.session.user) {
+//     console.log("INSIDE SERVICE REDIRECT CONDITION");
+//     res.redirect("/service");
+//   }
+//   res.redirect(redirectURL);
+// });
+
+// app.get("/callback", (req, res) => {
+//   const queryString = req.query;
+//   const data = Object.fromEntries(new URLSearchParams(queryString));
+//   const receivedHmac = data.hmac;
+//   delete data.hmac; // Remove HMAC from data to calculate HMAC again
+
+//   console.log(data);
+//   console.log(verifyHmac(data, receivedHmac));
+//   if (data.did && data.email && verifyHmac(data, receivedHmac)) {
+//     req.session.user = { user_email: data.email };
+//     res.redirect("/service");
+//   } else {
+//     res.send("Tampered data");
+//   }
+// });
+
+/*                                 BASIC SP                                 */
+
+/*                                 BASIC IDP                                 */
 router
   .route("/references")
   .get(async (req, res) => {
@@ -279,15 +315,13 @@ router
     }
   });
 
-router
-  .route("/form")
-  .get(async (req, res) => {
-    try {
-      res.render("reference-form.pug", { title: "Reference Form" });
-    } catch (e) {
-      res.render("error", { message: e.message, error: e });
-    }
-  });
+router.route("/form").get(async (req, res) => {
+  try {
+    res.render("reference-form.pug", { title: "Reference Form" });
+  } catch (e) {
+    res.render("error", { message: e.message, error: e });
+  }
+});
 
 router.route("/add-org").get(async (req, res) => {
   try {
@@ -299,29 +333,32 @@ router.route("/add-org").get(async (req, res) => {
 
 router.route("/exists").post(async (req, res) => {
   try {
+    // Check if the provided reference exists in my database
     const doc = await ReferenceService.getModelByReference(req.body.refr);
     console.info("DOC->", doc);
     if (!doc) throw new Error("Reference doesn't exist!");
+    // reference exists now time to see if it resolves from blockchain
     const constructed_url =
-      process.env.AGENT_CONTROLLER + "/resolve-did?did=" + req.body.did;
+      process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
     let response = await axios.get(constructed_url);
     let data = {
       refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
       did: process.env.DID,
     };
-    // send acknowledge to the other party
-
+    // did exists in the block chain now basically tell other party to add me
     response = await axios.post(
       doc.domain + "/federation-entry-acknowledgement",
       data
     );
     if (!response.success) throw new Error("Failed to get acknowledgement!");
+    // Acknowledement received that other party added me to their registry
     data = {
       domain: doc.domain,
       org: doc.organization,
       did: req.body.did,
     };
 
+    // Finally i'll add to my registry
     response = await axios.post(process.env.FABRIC, data);
     res.status(201).json({ success: true });
   } catch (e) {
@@ -335,18 +372,20 @@ router.route("/federation-entry-acknowledgement").post(async (req, res) => {
   try {
     const doc = await ReferenceService.getModelByReference(req.body.refr);
     if (!doc) throw new Error("Reference doesn't exist!");
+    // if the party is already added to registry then just send acknowledement
     if (doc.isAdded) {
       res.status(201).json({ success: true });
     } else {
-      // resolving DID
+      // otherwise resolving DID
       const constructed_url =
-        process.env.AGENT_CONTROLLER + "/resolve-did?did=" + req.body.did;
+        process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
       let response = await axios.get(constructed_url);
       let data = {
         domain: doc.domain,
         org: doc.domain,
         did: req.body.did,
       };
+      // add to registry
       response = await axios.post(process.env.FABRIC, data);
       updateIsAdded = await ReferenceService.updateIsAdded(req.body.refr);
       res.status(201).json({ success: true });
