@@ -290,6 +290,15 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 
 /*                                 BASIC IDP                                 */
 router
+  .route("/user-profile")
+  .get(isAuthenticated,async (req, res) => {
+    try {
+      res.render("user-profile.pug", {user: req.session.user.user_email , title: "Profile" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
+    }
+  })
+router
   .route("/references")
   .get(async (req, res) => {
     try {
@@ -410,33 +419,40 @@ router
       : [];
     console.log("Source", source);
     console.log("Attributes", attributes);
-    res.render("prove.pug", { source });
+    res.render("prove.pug", { source , attributes});
   })
   .post(isAuthenticated, (req, res) => {
     console.log("PROOF REQUEST BODY FROM SP", req.body);
-    if (req.body.name === "eshan") {
-      const id = "20101498";
-      const did = "X2J134AM41TX2";
-      const email = "2016mehrab@gmail.com";
-      const gender = "Male";
-      const country = "Bangladesh";
-      const name = "Mehrab";
-      const data = {
-        email,
-        gender,
-        name,
-        country,
-        did,
-        id,
-      };
-      const hmac = generateHmac(data);
-      const queryString = Object.entries({ ...data, hmac })
-        .map(([key, value]) => `${key}=${value}`)
-        .join("&");
+    // if (req.body.name === "eshan") {
+    //   const id = "20101498";
+    //   const did = "X2J134AM41TX2";
+    //   const email = "2016mehrab@gmail.com";
+    //   const gender = "Male";
+    //   const country = "Bangladesh";
+    //   const name = "Mehrab";
+    //   const data = {
+    //     email,
+    //     gender,
+    //     name,
+    //     country,
+    //     did,
+    //     id,
+    //   };
+    //   const hmac = generateHmac(data);
+    //   const queryString = Object.entries({ ...data, hmac })
+    //     .map(([key, value]) => `${key}=${value}`)
+    //     .join("&");
 
-      console.log(queryString);
-      res.redirect(req.body.source + "/callback" + "?" + queryString);
-    }
+    //   console.log(queryString);
+    //   res.redirect(req.body.source + "/callback" + "?" + queryString);
+    // }
+      // const hmac = generateHmac(data);
+      // const queryString = Object.entries({ ...data, hmac })
+      //   .map(([key, value]) => `${key}=${value}`)
+      //   .join("&");
+
+      // console.log(queryString);
+      // res.redirect(req.body.source + "/callback" + "?" + queryString);
   });
 
 /*                                 PART OF SP-IDP dance: IDP                                 */

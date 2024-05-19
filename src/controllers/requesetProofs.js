@@ -31,15 +31,17 @@ exports.requestProof = async (req, res) => {
   // response = await axios.get(my_server + "/set-connectionid");
   let attrs = req.body.attributes.split(",");
   if(!req.session.connection_id){
-    res.redirect("/login-page");
+    res.redirect("/login");
   }
 
   attrs = attrs.map((e) => e.trim());
   console.info("REQUEST BODY", req.body);
-  const { schema_id, attributes } = req.body;
+  const schema_id = process.env.SCHEMA_ID;
+  const {  attributes } = req.body;
 
   // Step 2: Split the attributes string into an array
   const attributesArray = attributes.split(", ").map((attr) => attr.trim());
+  console.log("attributesArray", attributesArray);
 
   // Step 3: Create an object for each attribute
   let requestedAttributes = {};
@@ -53,6 +55,7 @@ exports.requestProof = async (req, res) => {
       ],
     };
   });
+  console.log("requested Attributes", requestedAttributes);
 
   let data = {
     connection_id: req.session.connection_id,
