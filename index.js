@@ -9,7 +9,7 @@ const PORT = process.env.PORT;
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const config = require("./config/index.js");
-// Set the view engine to Pug
+
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static("public"));
@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: process.env.IDP_SECRET,
+    secret: process.env.SP_SECRET,
     resave: true,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 180 }),
@@ -27,7 +27,6 @@ app.use(
     },
   })
 );
-
 
 app.use(routes);
 

@@ -398,6 +398,56 @@ router.route("/federation-entry-acknowledgement").post(async (req, res) => {
 
 /*                                 BASIC IDP                                 */
 
+
+/*                                 PART OF SP-IDP dance: SP                                 */
+
+
+
+/*                                 PART OF SP-IDP dance: SP                                 */
+
+
+/*                                 PART OF SP-IDP dance: IDP                                 */
+
+router
+  .route("/prove")
+  .get(isAuthenticated, (req, res) => {
+    const source = req.query.source || "unknown";
+    const attributes = req.query.attribute
+      ? JSON.parse(decodeURIComponent(req.query.attribute))
+      : [];
+    console.log("Source", source);
+    console.log("Attributes", attributes);
+    res.render("prove.pug", { source });
+  })
+  .post(isAuthenticated, (req, res) => {
+    console.log("PROOF REQUEST BODY FROM SP", req.body);
+    if (req.body.name === "eshan") {
+      const id = "20101498";
+      const did = "X2J134AM41TX2";
+      const email = "2016mehrab@gmail.com";
+      const gender = "Male";
+      const country = "Bangladesh";
+      const name = "Mehrab";
+      const data = {
+        email,
+        gender,
+        name,
+        country,
+        did,
+        id,
+      };
+      const hmac = generateHmac(data);
+      const queryString = Object.entries({ ...data, hmac })
+        .map(([key, value]) => `${key}=${value}`)
+        .join("&");
+
+      console.log(queryString);
+      res.redirect(req.body.source + "/callback" + "?" + queryString);
+    }
+  });
+
+/*                                 PART OF SP-IDP dance: IDP                                 */
+
 router
   .route("/webhooks/*")
   .get((req, res) => {
