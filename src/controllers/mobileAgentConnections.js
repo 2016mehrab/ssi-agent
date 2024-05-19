@@ -54,8 +54,9 @@ exports.reconnectWithEmail = async (req, res) => {
     req.session.connection_id = existingUser.connectionId;
     console.log("session cid",req.session.connection_id)
     global_connection_id = existingUser.connectionId;
-
-    res.redirect("/request_proofs");
+    const redirectTo = req.session.returnTo || '/';
+    delete req.session.returnTo;
+    res.status(200).json({ success: true, redirect: redirectTo });
   } catch (error) {
     console.error(error);
     res.status(500).render("error");
