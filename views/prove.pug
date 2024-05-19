@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  section
+    h1 Welcome To Identity Provider
+    form(action='/prove', method='post')
+      input(type='hidden', name='source', value=source)
+      button(type='submit' class='btn btn-error') Submit

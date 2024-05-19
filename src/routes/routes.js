@@ -6,6 +6,7 @@ const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
 const { isAuthenticated } = require("../middlewares/auth-middleware.js");
 
+const { generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
   generateQRcode,
   reconnectWithEmail,
@@ -77,7 +78,7 @@ router
 
 router.route("/mobile-agent-connection-generation").post(generateQRcode);
 router.route("/login").post(reconnectWithEmail);
-router.route("/login-page").get(async (req, res) => {
+router.route("/login").get(async (req, res) => {
   try {
     res.status(200).render("reconnect.pug");
   } catch (e) {
