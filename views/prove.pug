@@ -2,7 +2,13 @@ extends layout
 
 block content
   section
-    h1 Welcome To Identity Provider
+    h1 Prove
+    hr
+    p Requires the following attributes to be proved and sent to #{source}
+    each attr in attributes
+      ul
+        li 
+          strong #{attr}
     form(action='/prove', method='post')
       input(type='hidden', name='source', value=source)
-      button(type='submit' class='btn btn-error') Submit
+      button(type='submit' class='btn btn-error') Approve
