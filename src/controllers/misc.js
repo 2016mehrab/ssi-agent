@@ -153,6 +153,15 @@ exports.getConnectionStatus = async (req, res) => {
   }
 };
 
+exports.getRevealedCredStatus = async (req, res) => {
+  if (global_revealed_attrs === null) {
+    res.status(400).json({success:false});
+  } else {
+    req.session.attributes = global_revealed_attrs;
+    res.status(200).json({success:true,attrs:global_revealed_attrs});
+  }
+};
+
 exports.getCredentialStatus = async (req, res) => {
   if (global_credential_status === null) {
     res.status(200).json(null);

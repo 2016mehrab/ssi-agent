@@ -26,8 +26,8 @@ exports.generateQRcode = async (req, res) => {
     const userdata = { email: connection_mail, connectionId: id };
     const inviteURL = JSON.stringify(response.data["invitation_url"], null, 4);
 
-    await UserService.create(userdata);
 
+    await UserService.create(userdata);
     qrcode.toDataURL(inviteURL, (err, src) => {
       if (err) {
         console.error("Error generating QR code:", err);

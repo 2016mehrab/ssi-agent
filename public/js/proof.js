@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function executeQuery() {
-  var id = document.getElementById("connection_id").textContent.trim();
+  var id = document.getElementById("revealed-cred-status").textContent.trim();
   id += "";
-  fetch("/connection-status")
+  fetch("revealed-cred-status")
     .then((r) => r.text())
     .then((data) => {
       console.log("ID: " + id);
@@ -14,7 +14,7 @@ function executeQuery() {
       // if (id === data) {
       if ('"' + id + '"' === data) {
         console.log("condition inside");
-        window.location.href = "/user-profile";
+        window.location.href = "/agent_info_page";
       }
       setTimeout(executeQuery, 5000);
     });

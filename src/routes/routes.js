@@ -4,7 +4,9 @@ require("dotenv").config();
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
+const UserService = require("../services/UserService.js")
 const { isAuthenticated } = require("../middlewares/auth-middleware.js");
+
 
 const { generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
@@ -56,6 +58,7 @@ const {
   publicDid,
   setConnectionId,
   resolvePublicDid,
+  getRevealedCredStatus,
 } = require("../controllers/misc.js");
 
 const User = require("../models/User.js");
@@ -67,6 +70,8 @@ global.global_credential_status = null;
 global.global_schema_def = null;
 global.global_cred_def = null;
 global.global_connection_id = null;
+global.global_attributes = null;
+global.global_revealed_attrs = {};
 /* GLOBAL */
 
 /*                                 api                                         */
@@ -111,7 +116,7 @@ router
 router
   .route("/request-proof-v1")
   .get(getProofRecords)
-  .post(requestProof)
+  .post(isAuthenticated, requestProof)
   .delete(deleteProofRecords);
 router
   .route("/request-proof-v2")
@@ -129,6 +134,7 @@ router
   .get(getAllCredentials)
   .delete(deleteAllCredentials);
 router.route("/connection-status").get(getConnectionStatus);
+router.route("/revealed-cred-status").get(getRevealedCredStatus);
 router.route("/credential-status").get(getCredentialStatus);
 router.route("/connection-info").get(getConnectionInfo);
 router.route("/set-globals").get(setGlobals);
@@ -289,15 +295,17 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 /*                                 BASIC SP                                 */
 
 /*                                 BASIC IDP                                 */
-router
-  .route("/user-profile")
-  .get(isAuthenticated,async (req, res) => {
-    try {
-      res.render("user-profile.pug", {user: req.session.user.user_email , title: "Profile" });
-    } catch (e) {
-      res.render("error", { message: e.message, error: e });
-    }
-  })
+router.route("/user-profile").get(isAuthenticated, async (req, res) => {
+  try {
+    res.render("user-profile.pug", {
+      user: req.session.user.user_email,
+      title: "Profile",
+    });
+  } catch (e) {
+    console.error(e);
+    res.render("error", { message: e.message, error: e });
+  }
+});
 router
   .route("/references")
   .get(async (req, res) => {
@@ -417,9 +425,13 @@ router
     const attributes = req.query.attribute
       ? JSON.parse(decodeURIComponent(req.query.attribute))
       : [];
+
     console.log("Source", source);
     console.log("Attributes", attributes);
-    res.render("prove.pug", { source , attributes});
+    global_attributes = attributes;
+    req.session.attributes = attributes;
+    console.log("Session Attributes", req.session.attributes);
+    res.render("prove.pug", { source, attributes });
   })
   .post(isAuthenticated, (req, res) => {
     console.log("PROOF REQUEST BODY FROM SP", req.body);
@@ -446,16 +458,21 @@ router
     //   console.log(queryString);
     //   res.redirect(req.body.source + "/callback" + "?" + queryString);
     // }
-      // const hmac = generateHmac(data);
-      // const queryString = Object.entries({ ...data, hmac })
-      //   .map(([key, value]) => `${key}=${value}`)
-      //   .join("&");
+    // const hmac = generateHmac(data);
+    // const queryString = Object.entries({ ...data, hmac })
+    //   .map(([key, value]) => `${key}=${value}`)
+    //   .join("&");
 
-      // console.log(queryString);
-      // res.redirect(req.body.source + "/callback" + "?" + queryString);
+    // console.log(queryString);
+    // res.redirect(req.body.source + "/callback" + "?" + queryString);
   });
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
+function logRequestedAttributes(jsonData, attributes) {
+  attributes.forEach((attribute) => {
+    console.log(jsonData["requested_attributes"][attribute]);
+  });
+}
 
 router
   .route("/webhooks/*")
@@ -472,7 +489,19 @@ router
       req.session.connection_id = req.body["connection_id"];
       global_connection_id = req.body["connection_id"];
     }
-    console.info("Session->", req.session.connection_id);
-    console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
+
+    if (req.body["verified"] === "true") {
+      console.log("Credential Being Verified");
+
+      console.log("Global attrs", global_attributes);
+      global_attributes.forEach((attribute) => {
+        global_revealed_attrs[attribute] =
+          req.body.presentation.requested_proof.revealed_attrs[attribute].raw;
+      });
+    }
+    console.log("Global revealed attrs", global_revealed_attrs);
+
+    // console.info("Session->", req.session.connection_id);
+    // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });
 module.exports = router;

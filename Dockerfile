@@ -19,6 +19,7 @@ RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/truste
 
 # pip install aries-cloudagent;pip install aries_askar;pip install indy_credx;pip install anoncreds;pip install indy_vdr;
 # pip install --no-cache-dir  --force-reinstall aries-cloudagent
+# pip install --no-cache-dir --force-reinstall 'aries-cloudagent<0.12.0'
 # pip install --no-cache-dir  --force-reinstall aries_askar
 # pip install --no-cache-dir  --force-reinstall indy_credx
 # pip install --no-cache-dir  --force-reinstall anoncreds

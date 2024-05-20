@@ -3,17 +3,17 @@ extends layout
 block content
     section
         header
-            h1 Create Invitation
+            h1 Invitation
 
         div
             h2 Scan the QR Code to access data!
             img.qr-code(src=src alt="QR Code Image")
-            h4(id="connection_id")  #{id}
+            h4(id="connection_id" style="display: none;")  #{id}
 
     style.
         .qr-code {
-            width: 200px;
-            height: 200px;
+            width: 400px;
+            height: 400px;
         }
 
     script(type='text/javascript', src="/js/mobile-agent-connection.js")

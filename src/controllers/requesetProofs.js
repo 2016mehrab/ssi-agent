@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const { generateHmac, verifyHmac } = require("../../utils/index.js");
 const axios = require("axios");
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
@@ -30,22 +31,30 @@ exports.requestProof = async (req, res) => {
   let response;
   // response = await axios.get(my_server + "/set-connectionid");
   let attrs = req.body.attributes.split(",");
-  if(!req.session.connection_id){
-    res.redirect("/login");
-  }
+  // if(!req.session.connection_id){
+  //   res.redirect("/login");
+  // }
+
+  // const hmac = generateHmac(data);
+  // const queryString = Object.entries({ ...data, hmac })
+  //   .map(([key, value]) => `${key}=${value}`)
+  //   .join("&");
+
+  // console.log("queryString",queryString);
 
   attrs = attrs.map((e) => e.trim());
   console.info("REQUEST BODY", req.body);
   const schema_id = process.env.SCHEMA_ID;
-  const {  attributes } = req.body;
-
+  const  attributes  = JSON.parse(req.body.attributes);
+  console.log("attributes after PARSE", attributes);
   // Step 2: Split the attributes string into an array
-  const attributesArray = attributes.split(", ").map((attr) => attr.trim());
-  console.log("attributesArray", attributesArray);
+  // const attributesArray = attributes.split(", ").map((attr) => attr.trim());
+  // console.log("attributesArray", attributesArray);
 
   // Step 3: Create an object for each attribute
   let requestedAttributes = {};
-  attributesArray.forEach((attribute) => {
+  // attributesArray.forEach((attribute) => {
+  attributes.forEach((attribute) => {
     requestedAttributes[attribute] = {
       name: attribute,
       restrictions: [
@@ -55,7 +64,8 @@ exports.requestProof = async (req, res) => {
       ],
     };
   });
-  console.log("requested Attributes", requestedAttributes);
+
+  console.log("requested Attributes", JSON.stringify(requestedAttributes));
 
   let data = {
     connection_id: req.session.connection_id,
@@ -69,6 +79,7 @@ exports.requestProof = async (req, res) => {
     },
   };
 
+  console.log("sent data will be", JSON.stringify(data));
   try {
     response = await axios.post(url + "/present-proof/send-request", data, {
       headers: {
@@ -77,7 +88,8 @@ exports.requestProof = async (req, res) => {
       },
     });
 
-    res.status(200).render("waiting.pug");
+  // res.redirect(req.body.source + "/callback" + "?" + queryString);
+    // res.status(200).render("waiting.pug");
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -141,9 +153,23 @@ exports.requestProofV2 = async (req, res) => {
       },
     });
 
-    res.status(200).render("waiting.pug");
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await delay(5000);
+
+    response = await axios.post(my_server + "/revealed-cred-status")
+    if(!response.data.success) throw new Error("Fail to get attributes");
+    console.log("attrs from response", response.data.attrs);
+    const hmac = generateHmac(data);
+    const queryString = Object.entries({ ...data, hmac })
+      .map(([key, value]) => `${key}=${value}`)
+      .join("&");
+
+    console.log(queryString);
+    res.redirect(req.body.source + "/callback" + "?" + queryString);
+    // res.status(200).render("waiting.pug");
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    res.status(400).render("error.pug");
+    // res.status(500).json({ message: e.message });
   }
 };
 

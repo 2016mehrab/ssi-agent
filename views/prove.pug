@@ -9,6 +9,7 @@ block content
       ul
         li 
           strong #{attr}
-    form(action='/prove', method='post')
+    form(action='/request-proof-v1', method='post')
       input(type='hidden', name='source', value=source)
+      input(type='hidden', name='attributes', value=attributes)
       button(type='submit' class='btn btn-error') Approve
