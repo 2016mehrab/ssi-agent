@@ -1,8 +1,10 @@
 module.exports.isAuthenticated = (req, res, next) => {
-  if (req.session.connection_id) {
+  if (req.session.user?.connection_id) {
+    console.log("INSIDE AUTH MIDDLEWARE", )
+    res.locals.userName= req.session.user.user_name; 
     next();
   } else {
-    // res.status(401).send('You are not authorized to view this page');
+    console.log("AUTH MIDDLEWARE ELSE", req.session.user);
     req.session.returnTo = req.originalUrl;
     res.redirect('/login');
   }

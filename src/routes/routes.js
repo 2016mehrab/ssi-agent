@@ -81,15 +81,17 @@ router
   .delete(deleteConnections);
 
 router.route("/mobile-agent-connection-generation").post(generateQRcode);
-router.route("/login").post(reconnectWithEmail);
-router.route("/login").get(async (req, res) => {
-  try {
-    res.status(200).render("reconnect.pug");
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
+router
+  .route("/login")
+  .get(async (req, res) => {
+    try {
+      res.status(200).render("reconnect.pug");
+    } catch (e) {
+      console.log(e.message);
+      res.status(500).render("error.pug");
+    }
+  })
+  .post(reconnectWithEmail);
 
 router.route("/ngrok").get(ngrok);
 // SCHEMA DEF
@@ -149,7 +151,11 @@ router.route("/generate_invitation_page").get((req, res) => {
   }
 });
 
+<<<<<<< Updated upstream
 router.route("/schema_def_page").get((req, res) => {
+=======
+router.route("/schema_def_page").get(isAdmin, (req, res) => {
+>>>>>>> Stashed changes
   try {
     res.status(200).render("schema.pug");
   } catch (e) {
@@ -159,7 +165,7 @@ router.route("/schema_def_page").get((req, res) => {
 });
 
 // comes submit req from select_schema.pug
-router.route("/get-credential").post(async (req, res) => {
+router.route("/get-credential").post(isAuthenticated,async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
@@ -177,7 +183,7 @@ router.route("/get-credential").post(async (req, res) => {
   }
 });
 
-router.route("/select_schema").get(async (req, res) => {
+router.route("/select_schema").get(isAuthenticated,async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     res
@@ -208,7 +214,11 @@ router.route("/request_proofs").get(async (req, res) => {
   }
 });
 
+<<<<<<< Updated upstream
 router.route("/agent_info_page").get(async (req, res) => {
+=======
+router.route("/agent_info_page").get(isAdmin, async (req, res) => {
+>>>>>>> Stashed changes
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
@@ -260,6 +270,7 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 /*                                 page render                                 */
 
 /*                                 BASIC SP                                 */
+<<<<<<< Updated upstream
 // app.get("/signup_with_idp", function (req, res) {
 //   res.render("signup_with_idp.pug");
 // });
@@ -290,11 +301,14 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 //     res.send("Tampered data");
 //   }
 // });
+=======
+>>>>>>> Stashed changes
 
 /*                                 BASIC SP                                 */
 
 /*                                 BASIC IDP                                 */
 router.route("/user-profile").get(isAuthenticated, async (req, res) => {
+<<<<<<< Updated upstream
   try {
     res.render("user-profile.pug", {
       user: req.session.user.user_email,
@@ -304,10 +318,17 @@ router.route("/user-profile").get(isAuthenticated, async (req, res) => {
     console.error(e);
     res.render("error", { message: e.message, error: e });
   }
+=======
+  res.render("user-profile.pug");
+>>>>>>> Stashed changes
 });
 router
   .route("/references")
+<<<<<<< Updated upstream
   .get(async (req, res) => {
+=======
+  .get(isAdmin, async (req, res) => {
+>>>>>>> Stashed changes
     try {
       const references = await ReferenceService.getAll();
       res.render("reference-list.pug", { references, title: "References" });
@@ -332,7 +353,11 @@ router
     }
   });
 
+<<<<<<< Updated upstream
 router.route("/form").get(async (req, res) => {
+=======
+router.route("/form").get(isAdmin, async (req, res) => {
+>>>>>>> Stashed changes
   try {
     res.render("reference-form.pug", { title: "Reference Form" });
   } catch (e) {
@@ -467,11 +492,37 @@ router
   });
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
-function logRequestedAttributes(jsonData, attributes) {
-  attributes.forEach((attribute) => {
-    console.log(jsonData["requested_attributes"][attribute]);
+
+/*                                  Admin                                 */
+
+router
+  .route("/admin-login")
+  .get((req, res) => {
+    res.render("admin-login.pug");
+  })
+
+  .post(async (req, res) => {
+    const { name, password } = req.body;
+    if (password === "admin") {
+      req.session.admin = {
+        name: name,
+      };
+      res.redirect("/agent_info_page");
+      return;
+    }
+    res.redirect("/admin-login");
   });
 }
+
+router.route("/logout").get((req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.redirect("/");
+    }
+    res.clearCookie("connect.sid"); // Clear the cookie
+    res.redirect("/"); // Redirect to the home page
+  });
+});
 
 router
   .route("/webhooks/*")
@@ -483,9 +534,13 @@ router
     const connection_state = req.body["state"];
     const { rfc23_state } = req.body;
     // console.log("RFC23_state", rfc23_state);
-    // console.log("Connection state", connection_state);
+    console.log("label state", req.body["their_label"]);
     if (connection_state === "active" && rfc23_state === "completed") {
-      req.session.connection_id = req.body["connection_id"];
+      // req.session.user = {
+      //   connection_id: req.body["connection_id"],
+      //   user_name: req.body["their_label"],
+      // };
+      // console.log("req.session",req.session.user );
       global_connection_id = req.body["connection_id"];
     }
 
@@ -501,8 +556,6 @@ router
     }
     console.log("Global revealed attrs", global_revealed_attrs);
     console.log("session revealed attrs", req.session.revealed_attrs);
-
-    // console.info("Session->", req.session.connection_id);
     // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });
 module.exports = router;

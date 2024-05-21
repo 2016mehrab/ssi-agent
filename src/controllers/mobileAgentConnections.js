@@ -26,7 +26,6 @@ exports.generateQRcode = async (req, res) => {
     const userdata = { email: connection_mail, connectionId: id };
     const inviteURL = JSON.stringify(response.data["invitation_url"], null, 4);
 
-
     await UserService.create(userdata);
     qrcode.toDataURL(inviteURL, (err, src) => {
       if (err) {
@@ -51,10 +50,11 @@ exports.reconnectWithEmail = async (req, res) => {
     if (!existingUser) {
       throw new Error("User with this email already exists");
     }
-    req.session.connection_id = existingUser.connectionId;
-    console.log("session cid",req.session.connection_id)
-    global_connection_id = existingUser.connectionId;
-    const redirectTo = req.session.returnTo || '/';
+    req.session.user = {
+      connection_id: existingUser.connectionId,
+      user_name: existingUser.email.split("@")[0],
+    };
+    const redirectTo = req.session.returnTo || "/";
     delete req.session.returnTo;
     res.status(200).json({ success: true, redirect: redirectTo });
   } catch (error) {

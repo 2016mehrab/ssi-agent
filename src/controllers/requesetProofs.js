@@ -68,7 +68,7 @@ exports.requestProof = async (req, res) => {
   // console.log("requested Attributes", JSON.stringify(requestedAttributes));
 
   let data = {
-    connection_id: req.session.connection_id,
+    connection_id: req.session.user.connection_id,
     trace: true,
     auto_remove:true,
     proof_request: {
@@ -139,11 +139,6 @@ exports.requestProof = async (req, res) => {
   }
 };
 
-//  TODO: Set connection id
-//  TODO: check if schema_id properly works
-//  TODO: consider adding deleting v2 proof records
-//  TODO: consider setting global schema def
-//  TODO: Send the request
 
 exports.requestProofV2 = async (req, res) => {
   let response;
