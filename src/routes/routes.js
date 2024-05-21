@@ -4,7 +4,10 @@ require("dotenv").config();
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
-const { isAuthenticated } = require("../middlewares/auth-middleware.js");
+const {
+  isAuthenticated,
+  isAuthenticatedSP,
+} = require("../middlewares/auth-middleware.js");
 
 const { generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
@@ -255,38 +258,6 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 /*                                 page render                                 */
 
 /*                                 BASIC SP                                 */
-// app.get("/signup_with_idp", function (req, res) {
-//   res.render("signup_with_idp.pug");
-// });
-// app.get("/service", isAuthenticated, function (req, res) {
-//   res.render("service.pug", { user: req.session.user.user_email });
-// });
-// app.post("/redirect", (req, res) => {
-//   // Redirect to App 3003's specific route
-//   if (req.session.user) {
-//     console.log("INSIDE SERVICE REDIRECT CONDITION");
-//     res.redirect("/service");
-//   }
-//   res.redirect(redirectURL);
-// });
-
-// app.get("/callback", (req, res) => {
-//   const queryString = req.query;
-//   const data = Object.fromEntries(new URLSearchParams(queryString));
-//   const receivedHmac = data.hmac;
-//   delete data.hmac; // Remove HMAC from data to calculate HMAC again
-
-//   console.log(data);
-//   console.log(verifyHmac(data, receivedHmac));
-//   if (data.did && data.email && verifyHmac(data, receivedHmac)) {
-//     req.session.user = { user_email: data.email };
-//     res.redirect("/service");
-//   } else {
-//     res.send("Tampered data");
-//   }
-// });
-
-/*                                 BASIC SP                                 */
 
 /*                                 BASIC IDP                                 */
 router
@@ -332,7 +303,7 @@ router.route("/add-org").get(async (req, res) => {
   }
 });
 
-router.route("/exists").post(async (req, res) => {
+router.route("/add-org").post(async (req, res) => {
   try {
     // Check if the provided reference exists in my database
     const doc = await ReferenceService.getModelByReference(req.body.refr);
@@ -399,55 +370,43 @@ router.route("/federation-entry-acknowledgement").post(async (req, res) => {
 
 /*                                 BASIC IDP                                 */
 
-
 /*                                 PART OF SP-IDP dance: SP                                 */
 
+router.get("/service-index", isAuthenticatedSP, function (req, res) {
+  res.render("service-index.pug", { user: req.session.user.user_email });
+});
 
-
-/*                                 PART OF SP-IDP dance: SP                                 */
-
-
-/*                                 PART OF SP-IDP dance: IDP                                 */
+router.get("/service", isAuthenticatedSP, function (req, res) {
+  res.render("service.pug", { user: req.session.user.user_email });
+});
 
 router
-  .route("/prove")
-  .get(isAuthenticated, (req, res) => {
-    const source = req.query.source || "unknown";
-    const attributes = req.query.attribute
-      ? JSON.parse(decodeURIComponent(req.query.attribute))
-      : [];
-    console.log("Source", source);
-    console.log("Attributes", attributes);
-    res.render("prove.pug", { source });
-  })
-  .post(isAuthenticated, (req, res) => {
-    console.log("PROOF REQUEST BODY FROM SP", req.body);
-    if (req.body.name === "eshan") {
-      const id = "20101498";
-      const did = "X2J134AM41TX2";
-      const email = "2016mehrab@gmail.com";
-      const gender = "Male";
-      const country = "Bangladesh";
-      const name = "Mehrab";
-      const data = {
-        email,
-        gender,
-        name,
-        country,
-        did,
-        id,
-      };
-      const hmac = generateHmac(data);
-      const queryString = Object.entries({ ...data, hmac })
-        .map(([key, value]) => `${key}=${value}`)
-        .join("&");
-
-      console.log(queryString);
-      res.redirect(req.body.source + "/callback" + "?" + queryString);
+  .route("/signup_with_idp")
+  .get(async (req, res) => {
+    try {
+      const references = await ReferenceService.getAll();
+      res.render("signup_with_idp.pug", { references, title: "References" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
     }
+  })
+  .post((req, res) => {
+    console.log("PATH", req.url, "REQUEST BODY", req.body);
+
+    if (req.session.user) {
+      console.log("INSIDE SERVICE REDIRECT CONDITION");
+      res.redirect("/service");
+    }
+    const domain = req.protocol + "://" + req.get("host");
+    const attributes = JSON.stringify(["Email", "Id", "Name"]);
+    console.info("Domain", domain, "Attrs", attributes);
+    const redirectUrl = `${
+      req.body.reference_domain
+    }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
+    res.redirect(redirectUrl);
   });
 
-/*                                 PART OF SP-IDP dance: IDP                                 */
+/*                                 PART OF SP-IDP dance: SP                                 */
 
 router
   .route("/webhooks/*")

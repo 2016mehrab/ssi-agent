@@ -7,3 +7,12 @@ module.exports.isAuthenticated = (req, res, next) => {
     res.redirect('/login');
   }
 };
+
+module.exports.isAuthenticatedSP = (req, res, next) => {
+  if (req.session.connection_id) {
+    next();
+  } else {
+    req.session.returnTo = req.originalUrl;
+    res.redirect('/signup_with_idp');
+  }
+};
