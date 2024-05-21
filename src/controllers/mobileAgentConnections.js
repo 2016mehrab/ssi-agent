@@ -54,7 +54,7 @@ exports.reconnectWithEmail = async (req, res) => {
       connection_id: existingUser.connectionId,
       user_name: existingUser.email.split("@")[0],
     };
-    const redirectTo = req.session.returnTo || "/";
+    const redirectTo = req.session.returnTo || "/user-profile";
     delete req.session.returnTo;
     res.status(200).json({ success: true, redirect: redirectTo });
   } catch (error) {
