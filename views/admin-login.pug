@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  section
+    header
+      h1 Admin Login
+
+    form(id="myForm" action="/admin-login" method="POST")
+      fieldset 
+        legend Login
+        div(class="form-group")
+          label(for='name') Name:
+          input(type='text' name='name' id='name' placeholder='Enter name')
+        div(class="form-group")
+          label(for='password') Password:
+          input(type='password' name='password' id='password' placeholder='Enter password')
+        div(class="form-group")
+          input(type="submit" class="btn btn-primary" value="Login")

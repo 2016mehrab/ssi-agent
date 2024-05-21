@@ -1,24 +1,45 @@
 extends layout
 
 block content
+  header
+    h1 Welcome to Identity Provider
   section
-    header
-      h1 Welcome to Agent-1
-    form(id="myForm" action="/create-connection" method="POST")
-      fieldset 
-        legend Create a connection
-        div(class="form-group")
-          label(for="label") Your Label:
-          input(id="label" name="my_label" type="text" placeholder="Your Label")
-
-        div(class="form-group")
-          label(for="alias") Connection Alias:
-          input(id="alias" name="alias" type="text" placeholder="Provide a name for the connection")
-
-        div(class="form-group")
-          label(for="controller") Where to connect:
-          input(id="controller" name="agent_controller" type="text" placeholder="Other agent's controller url")
-
-        div(class="form-group")
-          input(type="submit" value="Submit")
-  script(type='text/javascript', src="/js/client.js")
+    .intro
+      h2 Your One-Stop Solution for Digital Identity Management
+      p Identity Provider offers a robust and secure platform to manage your digital identity with ease. Our services ensure your information is protected while providing seamless access to various digital services.
+    .features
+      h3 Features
+      ul
+        li 
+          strong Secure Authentication:
+          |  Enjoy top-notch security with our multi-factor authentication system.
+        li 
+          strong Easy Integration:
+          |  Integrate our services effortlessly with your existing systems.
+        li 
+          strong User-Friendly Interface:
+          |  Navigate our platform with ease using our intuitive interface.
+        li 
+          strong Comprehensive Management:
+          |  Manage user credentials, proofs, and more from a single dashboard.
+    .benefits
+      h3 Benefits
+      ul
+        li 
+          strong Enhanced Security:
+          |  Protect your identity and data with state-of-the-art security measures.
+        li 
+          strong Seamless Experience:
+          |  Experience smooth and hassle-free digital interactions.
+        li 
+          strong Reliability:
+          |  Trust in our reliable and scalable solutions for all your identity management needs.
+        li 
+          strong Support:
+          |  Get 24/7 support from our dedicated team of experts.
+    .call-to-action
+      h3 Ready to Get Started?
+      p Join the thousands of users who trust Identity Provider for their digital identity management needs. 
+      a.button(href="/generate_invitation_page") Create Connection With Wallet
+      br
+      a.button(href="/login") Reconnect With Wallet

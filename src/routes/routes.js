@@ -5,7 +5,10 @@ const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
 const UserService = require("../services/UserService.js");
-const { isAuthenticated } = require("../middlewares/auth-middleware.js");
+const {
+  isAuthenticated,
+  isAdmin,
+} = require("../middlewares/auth-middleware.js");
 
 const { log, generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
@@ -149,7 +152,7 @@ router.route("/generate_invitation_page").get((req, res) => {
   }
 });
 
-router.route("/schema_def_page").get((req, res) => {
+router.route("/schema_def_page").get(isAdmin,(req, res) => {
   try {
     res.status(200).render("schema.pug");
   } catch (e) {
@@ -208,12 +211,12 @@ router.route("/request_proofs").get(async (req, res) => {
   }
 });
 
-router.route("/agent_info_page").get(async (req, res) => {
+router.route("/agent_info_page").get(isAdmin,async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
-    response = await axios.get(my_server + "/credential-definitions");
-    const cred_defs = response.data;
+    // response = await axios.get(my_server + "/credential-definitions");
+    // const cred_defs = response.data;
     response = await axios.get(my_server + "/issue-credential");
     const cred_records = response.data;
     response = await axios.get(my_server + "/connections");
@@ -238,7 +241,7 @@ router.route("/agent_info_page").get(async (req, res) => {
 
     res.status(200).render("agent_info.pug", {
       schemas: schemas,
-      cred_defs: cred_defs,
+      // cred_defs: cred_defs,
       records: cred_records,
       connections: connections,
     });
@@ -260,54 +263,18 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 /*                                 page render                                 */
 
 /*                                 BASIC SP                                 */
-// app.get("/signup_with_idp", function (req, res) {
-//   res.render("signup_with_idp.pug");
-// });
-// app.get("/service", isAuthenticated, function (req, res) {
-//   res.render("service.pug", { user: req.session.user.user_email });
-// });
-// app.post("/redirect", (req, res) => {
-//   // Redirect to App 3003's specific route
-//   if (req.session.user) {
-//     console.log("INSIDE SERVICE REDIRECT CONDITION");
-//     res.redirect("/service");
-//   }
-//   res.redirect(redirectURL);
-// });
 
-// app.get("/callback", (req, res) => {
-//   const queryString = req.query;
-//   const data = Object.fromEntries(new URLSearchParams(queryString));
-//   const receivedHmac = data.hmac;
-//   delete data.hmac; // Remove HMAC from data to calculate HMAC again
-
-//   console.log(data);
-//   console.log(verifyHmac(data, receivedHmac));
-//   if (data.did && data.email && verifyHmac(data, receivedHmac)) {
-//     req.session.user = { user_email: data.email };
-//     res.redirect("/service");
-//   } else {
-//     res.send("Tampered data");
-//   }
-// });
 
 /*                                 BASIC SP                                 */
 
 /*                                 BASIC IDP                                 */
 router.route("/user-profile").get(isAuthenticated, async (req, res) => {
-  try {
-    res.render("user-profile.pug", {
-      user: req.session.user.user_email,
-      title: "Profile",
-    });
-  } catch (e) {
-    console.error(e);
-    res.render("error", { message: e.message, error: e });
-  }
+    res.render("user-profile.pug");
 });
+
 router
   .route("/references")
-  .get(async (req, res) => {
+  .get(isAdmin,async (req, res) => {
     try {
       const references = await ReferenceService.getAll();
       res.render("reference-list.pug", { references, title: "References" });
@@ -332,7 +299,7 @@ router
     }
   });
 
-router.route("/form").get(async (req, res) => {
+router.route("/form").get(isAdmin,async (req, res) => {
   try {
     res.render("reference-form.pug", { title: "Reference Form" });
   } catch (e) {
@@ -348,7 +315,7 @@ router.route("/add-org").get(async (req, res) => {
   }
 });
 
-router.route("/exists").post(async (req, res) => {
+router.route("/add-org").post(async (req, res) => {
   try {
     // Check if the provided reference exists in my database
     const doc = await ReferenceService.getModelByReference(req.body.refr);
@@ -467,11 +434,28 @@ router
   });
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
-function logRequestedAttributes(jsonData, attributes) {
-  attributes.forEach((attribute) => {
-    console.log(jsonData["requested_attributes"][attribute]);
+
+/*                                  Admin                                 */
+
+
+router
+  .route("/admin-login")
+  .get((req, res) => {
+    res.render("admin-login.pug");
+  })
+
+  .post( async (req, res) => {
+    const { name, password } = req.body;
+    if (password === "admin") {
+      req.session.admin = {
+        name: name,
+      };
+      res.redirect("/agent_info_page");
+      return;
+    }
+    res.redirect("/admin-login");
   });
-}
+/*                                  Admin                                 */
 
 router
   .route("/webhooks/*")
@@ -486,6 +470,7 @@ router
     // console.log("Connection state", connection_state);
     if (connection_state === "active" && rfc23_state === "completed") {
       req.session.connection_id = req.body["connection_id"];
+      req.session.user_name = req.body["their_label"];
       global_connection_id = req.body["connection_id"];
     }
 

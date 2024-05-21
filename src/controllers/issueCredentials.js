@@ -10,7 +10,7 @@ exports.getAllIssueCredentials = async (req, res) => {
   try {
     const response = await axios.get(url + "/issue-credential-2.0/records");
     let cred_records = response.data.results;
-    console.log(cred_records);
+    // console.log(cred_records);
 
     cred_records.forEach((item) => {
       delete item.cred_ex_record.cred_offer;

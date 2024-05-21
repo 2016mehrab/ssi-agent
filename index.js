@@ -28,6 +28,10 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  res.locals.currentPath = req.path;
+  next();
+});
 
 app.use(routes);
 

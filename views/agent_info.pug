@@ -2,7 +2,9 @@ extends layout
 
 block content
     header
-        h1 Agent Information
+        h1 Welcome, Mr. #{adminName}
+    section
+        h2 Agent Information
     section
         if connections && connections.length > 0
             table
@@ -26,17 +28,17 @@ block content
                         tr
                             each v in Object.values(obj)
                                 td #{v}
-        if cred_defs && cred_defs.length > 0
-            table
-                caption credential definitions 
-                thead
-                    tr
-                        each attr in Object.keys(cred_defs[0])
-                            th #{attr}
-                    each obj in cred_defs
-                        tr
-                            each v in Object.values(obj)
-                                td #{v}
+        //- if cred_defs && cred_defs.length > 0
+        //-     table
+        //-         caption credential definitions 
+        //-         thead
+        //-             tr
+        //-                 each attr in Object.keys(cred_defs[0])
+        //-                     th #{attr}
+        //-             each obj in cred_defs
+        //-                 tr
+        //-                     each v in Object.values(obj)
+        //-                         td #{v}
 
     section
         header 

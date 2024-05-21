@@ -13,24 +13,29 @@ html
               a.no-style(href="/") IDP
           nav.terminal-menu
             ul
-              //- li
-              //-   a.menu-item(href="/references") Reference-list
-              //- li
-              //-   a.menu-item(href="/form") Reference-form
-              //- li
-              //-   a.menu-item(href="/add-org") Add Organization
-              //- li
-              //-   a.menu-item(href="/agent_info_page") agent_info
-              //- li
-              //-   a.menu-item(href="/schema_def_page") schema_def
-              li
-                a.menu-item(href="/select_schema") Get Credential
-              //- li
-              //-   a.menu-item(href="/request_proofs") request_proofs
-              li
-                a.menu-item(href="/generate_invitation_page") sign_up
-              li
-                a.menu-item(href="/login") login
+              if !adminName
+                li
+                  a.menu-item(href="/add-org" class=currentPath === '/add-org' ? 'active' : '') Register SP
+              if adminName
+                li
+                  a.menu-item(href="/references" class=currentPath === '/references' ? 'active' : '') References
+                li
+                  a.menu-item(href="/form" class=currentPath === '/form' ? 'active' : '') Add Reference
+                li
+                  a.menu-item(href="/schema_def_page" class=currentPath === '/schema_def_page' ? 'active' : '') schema_def
+                li
+                  a.menu-item(href="/agent_info_page" class=currentPath === '/agent_info_page' ? 'active' : '') #{adminName ? "admin-"+adminName : 'agent-info'}
+              if !adminName && userName
+                li
+                  a.menu-item(href="/select_schema" class=currentPath === '/select_schema' ? 'active' : '') Get Credential
+                li
+                  a.menu-item(href="/request_proofs" class=currentPath === '/request_proofs' ? 'active' : '') request_proofs
+                li
+                  a.menu-item(href="/generate_invitation_page" class=currentPath === '/generate_invitation_page' ? 'active' : '') sign_up
+                li
+                  a.menu-item(href="/login" class=currentPath === '/login' ? 'active' : '') login
+                li
+                  a.menu-item(href="/user-profile" class=currentPath === '/user-profile' ? 'active' : '') #{userName ? userName : 'user'}
         hr
       block content
       div(class="footer-container")
