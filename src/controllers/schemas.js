@@ -13,6 +13,7 @@ exports.getAllSchemas = async (req, res) => {
       try {
         response = await axios.get(url + "/schemas/" + id);
         if (response.data.schema) {
+          // console.log("inside schemas info",response.data.schema)
           schema_infos.push(response.data.schema);
         }
       } catch (e) {
@@ -20,6 +21,7 @@ exports.getAllSchemas = async (req, res) => {
       }
     });
     await Promise.all(promises);
+    // console.log("Schema infos",schema_infos)
     res.status(200).json(schema_infos);
   } catch (e) {
     res.status(500).send(e);

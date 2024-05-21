@@ -5,7 +5,10 @@ const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
 const UserService = require("../services/UserService.js");
-const { isAuthenticated } = require("../middlewares/auth-middleware.js");
+const {
+  isAuthenticated,
+  isAdmin,
+} = require("../middlewares/auth-middleware.js");
 
 const { log, generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
@@ -151,7 +154,7 @@ router.route("/generate_invitation_page").get((req, res) => {
   }
 });
 
-router.route("/schema_def_page").get(isAdmin, (req, res) => {
+router.route("/schema_def_page").get(isAdmin,(req, res) => {
   try {
     res.status(200).render("schema.pug");
   } catch (e) {
@@ -210,12 +213,12 @@ router.route("/request_proofs").get(async (req, res) => {
   }
 });
 
-router.route("/agent_info_page").get(isAdmin, async (req, res) => {
+router.route("/agent_info_page").get(isAdmin,async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
-    response = await axios.get(my_server + "/credential-definitions");
-    const cred_defs = response.data;
+    // response = await axios.get(my_server + "/credential-definitions");
+    // const cred_defs = response.data;
     response = await axios.get(my_server + "/issue-credential");
     const cred_records = response.data;
     response = await axios.get(my_server + "/connections");
@@ -240,7 +243,7 @@ router.route("/agent_info_page").get(isAdmin, async (req, res) => {
 
     res.status(200).render("agent_info.pug", {
       schemas: schemas,
-      cred_defs: cred_defs,
+      // cred_defs: cred_defs,
       records: cred_records,
       connections: connections,
     });
@@ -267,11 +270,12 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 
 /*                                 BASIC IDP                                 */
 router.route("/user-profile").get(isAuthenticated, async (req, res) => {
-  res.render("user-profile.pug");
+    res.render("user-profile.pug");
 });
+
 router
   .route("/references")
-  .get(isAdmin, async (req, res) => {
+  .get(isAdmin,async (req, res) => {
     try {
       const references = await ReferenceService.getAll();
       res.render("reference-list.pug", { references, title: "References" });
@@ -296,7 +300,7 @@ router
     }
   });
 
-router.route("/form").get(isAdmin, async (req, res) => {
+router.route("/form").get(isAdmin,async (req, res) => {
   try {
     res.render("reference-form.pug", { title: "Reference Form" });
   } catch (e) {
@@ -312,7 +316,7 @@ router.route("/add-org").get(async (req, res) => {
   }
 });
 
-router.route("/exists").post(async (req, res) => {
+router.route("/add-org").post(async (req, res) => {
   try {
     // Check if the provided reference exists in my database
     const doc = await ReferenceService.getModelByReference(req.body.refr);
@@ -440,7 +444,7 @@ router
     res.render("admin-login.pug");
   })
 
-  .post(async (req, res) => {
+  .post( async (req, res) => {
     const { name, password } = req.body;
     if (password === "admin") {
       req.session.admin = {

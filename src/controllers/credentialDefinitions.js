@@ -6,7 +6,7 @@ exports.getAllCredentialDefinitions = async (req, res) => {
     let response = await axios.get(url + "/credential-definitions/created");
     let cred_ids = response.data.credential_definition_ids;
     let cred_infos = [];
-    console.log(cred_ids);
+    // console.log(cred_ids);
 
     let promises = cred_ids.map(async (id) => {
       try {
