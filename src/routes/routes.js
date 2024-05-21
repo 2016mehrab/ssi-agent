@@ -9,7 +9,7 @@ const {
   isAuthenticatedSP,
 } = require("../middlewares/auth-middleware.js");
 
-const { generateHmac, verifyHmac } = require("../../utils/index.js");
+const { generateHmac, verifyHmac, log } = require("../../utils/index.js");
 const {
   generateQRcode,
   reconnectWithEmail,
@@ -377,7 +377,7 @@ router.get("/service-index", isAuthenticatedSP, function (req, res) {
 });
 
 router.get("/service", isAuthenticatedSP, function (req, res) {
-  res.render("service.pug", { user: req.session.user.user_email });
+  res.render("service.pug", { user: req.session.user.user_name });
 });
 
 router
@@ -405,6 +405,23 @@ router
     }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
     res.redirect(redirectUrl);
   });
+
+router.get("/callback", (req, res) => {
+  const queryString = req.query;
+  let data = Object.fromEntries(new URLSearchParams(queryString));
+  const receivedHmac = data.hmac;
+  delete data.hmac;
+  console.log("hash comparison", verifyHmac(data, receivedHmac));
+
+  // TODO: compare did from fabric
+  if (data.did && data.Email && verifyHmac(data, receivedHmac)) {
+    req.session.user = { user_email: data.Email, user_name: data.Name };
+    console.log("inside condition", req.session.user);
+    res.redirect("/service");
+  } else {
+    res.send("Tampered data");
+  }
+});
 
 /*                                 PART OF SP-IDP dance: SP                                 */
 

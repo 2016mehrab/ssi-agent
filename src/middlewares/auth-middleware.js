@@ -9,7 +9,7 @@ module.exports.isAuthenticated = (req, res, next) => {
 };
 
 module.exports.isAuthenticatedSP = (req, res, next) => {
-  if (req.session.connection_id) {
+  if (req.session.user) {
     next();
   } else {
     req.session.returnTo = req.originalUrl;
