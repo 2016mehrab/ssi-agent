@@ -151,11 +151,7 @@ router.route("/generate_invitation_page").get((req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
-router.route("/schema_def_page").get((req, res) => {
-=======
 router.route("/schema_def_page").get(isAdmin, (req, res) => {
->>>>>>> Stashed changes
   try {
     res.status(200).render("schema.pug");
   } catch (e) {
@@ -214,11 +210,7 @@ router.route("/request_proofs").get(async (req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
-router.route("/agent_info_page").get(async (req, res) => {
-=======
 router.route("/agent_info_page").get(isAdmin, async (req, res) => {
->>>>>>> Stashed changes
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
@@ -270,65 +262,16 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 /*                                 page render                                 */
 
 /*                                 BASIC SP                                 */
-<<<<<<< Updated upstream
-// app.get("/signup_with_idp", function (req, res) {
-//   res.render("signup_with_idp.pug");
-// });
-// app.get("/service", isAuthenticated, function (req, res) {
-//   res.render("service.pug", { user: req.session.user.user_email });
-// });
-// app.post("/redirect", (req, res) => {
-//   // Redirect to App 3003's specific route
-//   if (req.session.user) {
-//     console.log("INSIDE SERVICE REDIRECT CONDITION");
-//     res.redirect("/service");
-//   }
-//   res.redirect(redirectURL);
-// });
-
-// app.get("/callback", (req, res) => {
-//   const queryString = req.query;
-//   const data = Object.fromEntries(new URLSearchParams(queryString));
-//   const receivedHmac = data.hmac;
-//   delete data.hmac; // Remove HMAC from data to calculate HMAC again
-
-//   console.log(data);
-//   console.log(verifyHmac(data, receivedHmac));
-//   if (data.did && data.email && verifyHmac(data, receivedHmac)) {
-//     req.session.user = { user_email: data.email };
-//     res.redirect("/service");
-//   } else {
-//     res.send("Tampered data");
-//   }
-// });
-=======
->>>>>>> Stashed changes
 
 /*                                 BASIC SP                                 */
 
 /*                                 BASIC IDP                                 */
 router.route("/user-profile").get(isAuthenticated, async (req, res) => {
-<<<<<<< Updated upstream
-  try {
-    res.render("user-profile.pug", {
-      user: req.session.user.user_email,
-      title: "Profile",
-    });
-  } catch (e) {
-    console.error(e);
-    res.render("error", { message: e.message, error: e });
-  }
-=======
   res.render("user-profile.pug");
->>>>>>> Stashed changes
 });
 router
   .route("/references")
-<<<<<<< Updated upstream
-  .get(async (req, res) => {
-=======
   .get(isAdmin, async (req, res) => {
->>>>>>> Stashed changes
     try {
       const references = await ReferenceService.getAll();
       res.render("reference-list.pug", { references, title: "References" });
@@ -353,11 +296,7 @@ router
     }
   });
 
-<<<<<<< Updated upstream
-router.route("/form").get(async (req, res) => {
-=======
 router.route("/form").get(isAdmin, async (req, res) => {
->>>>>>> Stashed changes
   try {
     res.render("reference-form.pug", { title: "Reference Form" });
   } catch (e) {
@@ -512,7 +451,7 @@ router
     }
     res.redirect("/admin-login");
   });
-}
+
 
 router.route("/logout").get((req, res) => {
   req.session.destroy((err) => {
