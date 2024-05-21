@@ -4,11 +4,10 @@ require("dotenv").config();
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
-const UserService = require("../services/UserService.js")
+const UserService = require("../services/UserService.js");
 const { isAuthenticated } = require("../middlewares/auth-middleware.js");
 
-
-const { generateHmac, verifyHmac } = require("../../utils/index.js");
+const { log, generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
   generateQRcode,
   reconnectWithEmail,
@@ -483,23 +482,25 @@ router
   .post(async (req, res) => {
     const connection_state = req.body["state"];
     const { rfc23_state } = req.body;
-    console.log("RFC23_state", rfc23_state);
-    console.log("Connection state", connection_state);
+    // console.log("RFC23_state", rfc23_state);
+    // console.log("Connection state", connection_state);
     if (connection_state === "active" && rfc23_state === "completed") {
       req.session.connection_id = req.body["connection_id"];
       global_connection_id = req.body["connection_id"];
     }
 
     if (req.body["verified"] === "true") {
-      console.log("Credential Being Verified");
-
-      console.log("Global attrs", global_attributes);
-      global_attributes.forEach((attribute) => {
+      global_attributes?.forEach((attribute) => {
         global_revealed_attrs[attribute] =
           req.body.presentation.requested_proof.revealed_attrs[attribute].raw;
       });
+      req.session.revealed_attrs = global_revealed_attrs;
+    } else {
+      global_revealed_attrs = {};
+      req.session.revealed_attrs = null;
     }
     console.log("Global revealed attrs", global_revealed_attrs);
+    console.log("session revealed attrs", req.session.revealed_attrs);
 
     // console.info("Session->", req.session.connection_id);
     // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);

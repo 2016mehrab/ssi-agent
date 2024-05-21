@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 exports.generateHmac = function (data) {
   const secret = "IDP's Reference secret";
   const hmac = crypto.createHmac("sha256", secret);
@@ -16,3 +17,13 @@ exports.verifyHmac = function (data, receivedHmac) {
   console.log("Sent hmac", calculatedHmac);
   return calculatedHmac === receivedHmac;
 };
+exports.log = function (p, data) {
+  console.log();
+  console.log("*******log********");
+  console.log();
+  console.info(p+" "+"data"+" "+data);
+  console.log();
+  console.log("*******log********");
+  console.log();
+};
+

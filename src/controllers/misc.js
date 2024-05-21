@@ -154,11 +154,11 @@ exports.getConnectionStatus = async (req, res) => {
 };
 
 exports.getRevealedCredStatus = async (req, res) => {
-  if (global_revealed_attrs === null) {
-    res.status(400).json({success:false});
+
+  if (!global_revealed_attrs.Email) {
+    res.status(200).json({success:false});
   } else {
-    req.session.attributes = global_revealed_attrs;
-    res.status(200).json({success:true,attrs:global_revealed_attrs});
+    res.status(200).json({success:true});
   }
 };
 

@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { generateHmac, verifyHmac } = require("../../utils/index.js");
+const { generateHmac, log,verifyHmac } = require("../../utils/index.js");
 const axios = require("axios");
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
@@ -43,10 +43,10 @@ exports.requestProof = async (req, res) => {
   // console.log("queryString",queryString);
 
   attrs = attrs.map((e) => e.trim());
-  console.info("REQUEST BODY", req.body);
+  // console.info("REQUEST BODY", req.body);
   const schema_id = process.env.SCHEMA_ID;
-  const  attributes  = JSON.parse(req.body.attributes);
-  console.log("attributes after PARSE", attributes);
+  const attributes = JSON.parse(req.body.attributes);
+  // console.log("attributes after PARSE", attributes);
   // Step 2: Split the attributes string into an array
   // const attributesArray = attributes.split(", ").map((attr) => attr.trim());
   // console.log("attributesArray", attributesArray);
@@ -65,11 +65,12 @@ exports.requestProof = async (req, res) => {
     };
   });
 
-  console.log("requested Attributes", JSON.stringify(requestedAttributes));
+  // console.log("requested Attributes", JSON.stringify(requestedAttributes));
 
   let data = {
     connection_id: req.session.connection_id,
     trace: true,
+    auto_remove:true,
     proof_request: {
       name: "Prove to IDP",
       version: "1.0",
@@ -79,7 +80,7 @@ exports.requestProof = async (req, res) => {
     },
   };
 
-  console.log("sent data will be", JSON.stringify(data));
+  // console.log("sent data will be", JSON.stringify(data));
   try {
     response = await axios.post(url + "/present-proof/send-request", data, {
       headers: {
@@ -88,10 +89,53 @@ exports.requestProof = async (req, res) => {
       },
     });
 
-  // res.redirect(req.body.source + "/callback" + "?" + queryString);
+    const maxAttempts = 20; // Number of attempts (1.5 per second)
+    let success = false;
+    for (let i = 0; i < maxAttempts; i++) {
+      const statusResponse = await axios.get(my_server+ "/revealed-cred-status", {
+        headers: {
+          accept: "application/json",
+        },
+      });
+      // console.log("status response", statusResponse.data);
+      if (statusResponse.data.success === true) {
+        success = true;
+        // console.log("Inside condition" );
+        break;
+      }
+      // process.stdout.write("^");
+      await new Promise((resolve) => setTimeout(resolve, 2500)); 
+    }
+
+    if (!success) {
+      throw new Error("Server error");
+    }
+
+    // console.log("current request session-1", req.session.attributes);
+    // console.log("current request session-2", req.session.connection_id);
+    // console.log("current request session-3", req.session.revealed_attrs);
+    
+    log(req.originalUrl,req.session.revealed_attrs);
+    global_revealed_attrs.did=process.env.IDP_DID;
+    const hmac = generateHmac(global_revealed_attrs);
+    const queryString = Object.entries({ ...global_revealed_attrs, hmac })
+      .map(([key, value]) => `${key}=${value}`)
+      .join("&");
+
+    let redirectURL=req.body.source + "/callback" + "?" + queryString;
+    console.info("Redirect Query String", redirectURL);
+      
+    res.redirect(redirectURL);
     // res.status(200).render("waiting.pug");
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    console.log();
+    console.log();
+    console.log();
+    // console.error("from",req.originalUrl,"error",e.message);
+    log(req.originalUrl,e.message)
+    // res.redirect("http://localhost:3003");
+    res.status(500).render("error");
+    // res.status(500).json({ message: e.message });
   }
 };
 
@@ -153,11 +197,9 @@ exports.requestProofV2 = async (req, res) => {
       },
     });
 
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    await delay(5000);
 
-    response = await axios.post(my_server + "/revealed-cred-status")
-    if(!response.data.success) throw new Error("Fail to get attributes");
+    response = await axios.post(my_server + "/revealed-cred-status");
+    if (!response.data.success) throw new Error("Fail to get attributes");
     console.log("attrs from response", response.data.attrs);
     const hmac = generateHmac(data);
     const queryString = Object.entries({ ...data, hmac })
