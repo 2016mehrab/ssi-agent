@@ -79,16 +79,6 @@ router
   .post(createConnection)
   .delete(deleteConnections);
 
-router.route("/mobile-agent-connection-generation").post(generateQRcode);
-router.route("/login").post(reconnectWithEmail);
-router.route("/login").get(async (req, res) => {
-  try {
-    res.status(200).render("reconnect.pug");
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
 
 router.route("/ngrok").get(ngrok);
 // SCHEMA DEF
@@ -137,207 +127,6 @@ router.route("/connection-info").get(getConnectionInfo);
 router.route("/set-globals").get(setGlobals);
 router.route("/set-connectionid").get(setConnectionId);
 
-/*                                 page render                                 */
-router.route("/generate_invitation_page").get((req, res) => {
-  try {
-    res.status(200).render("generate_invitation.pug");
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/schema_def_page").get((req, res) => {
-  try {
-    res.status(200).render("schema.pug");
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-// comes submit req from select_schema.pug
-router.route("/get-credential").post(async (req, res) => {
-  try {
-    let response = await axios.get(my_server + "/schemas");
-    const schemas = response.data;
-    let selected_schema = schemas.filter(
-      (schema) => schema.id === req.body.schema_id
-    )[0];
-    global_schema_def = selected_schema.id;
-    res.status(200).render("issue_credential.pug", {
-      schema_id: selected_schema.id,
-      attrs: selected_schema.attrNames,
-    });
-  } catch (e) {
-    console.log(req.originalUrl + " -> " + e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/select_schema").get(async (req, res) => {
-  try {
-    let response = await axios.get(my_server + "/schemas");
-    res
-      .status(200)
-      .render("select_schema.pug", { schema_names: response.data });
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/request_proofs").get(async (req, res) => {
-  let response;
-  try {
-    if (!req.session.connection_id) {
-      res.redirect("/login-page");
-    } else {
-      global_connection_id = req.session.connection_id;
-
-      response = await axios.get(my_server + "/schemas");
-      res
-        .status(200)
-        .render("request_proofs.pug", { schema_names: response.data });
-    }
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/agent_info_page").get(async (req, res) => {
-  try {
-    let response = await axios.get(my_server + "/schemas");
-    const schemas = response.data;
-    response = await axios.get(my_server + "/credential-definitions");
-    const cred_defs = response.data;
-    response = await axios.get(my_server + "/issue-credential");
-    const cred_records = response.data;
-    response = await axios.get(my_server + "/connections");
-    let connections = response.data.results;
-    connections = connections.map(
-      ({
-        state,
-        alias,
-        connection_id,
-        created_at,
-        their_role,
-        their_label,
-      }) => ({
-        state,
-        alias,
-        connection_id,
-        created_at: new Date(created_at).toLocaleString(),
-        their_role,
-        their_label,
-      })
-    );
-
-    res.status(200).render("agent_info.pug", {
-      schemas: schemas,
-      cred_defs: cred_defs,
-      records: cred_records,
-      connections: connections,
-    });
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/mobile-agent-connection-invitation").get(async (req, res) => {
-  res.status(200).render("invitation.pug");
-});
-router.route("/credential_received").get(async (req, res) => {
-  res.status(200).render("credential_received.pug");
-});
-router.route("/mobile-agent-connection").get(async (req, res) => {
-  res.status(200).render("qrcode", qr_data);
-});
-/*                                 page render                                 */
-
-/*                                 BASIC SP                                 */
-
-/*                                 BASIC IDP                                 */
-router
-  .route("/references")
-  .get(async (req, res) => {
-    try {
-      const references = await ReferenceService.getAll();
-      res.render("reference-list.pug", { references, title: "References" });
-    } catch (e) {
-      res.render("error", { message: e.message, error: e });
-    }
-  })
-  .post(async (req, res) => {
-    try {
-      console.log("REQ BODY", req.body);
-
-      const reference = await ReferenceService.create({
-        reference: req.body.refr,
-        isAdded: false,
-        domain: req.body.domain,
-        organization: req.body.org,
-      });
-      res.status(201).json({ success: true });
-    } catch (e) {
-      console.error(e);
-      res.status(400).json({ success: false });
-    }
-  });
-
-router.route("/form").get(async (req, res) => {
-  try {
-    res.render("reference-form.pug", { title: "Reference Form" });
-  } catch (e) {
-    res.render("error", { message: e.message, error: e });
-  }
-});
-
-router.route("/add-org").get(async (req, res) => {
-  try {
-    res.render("reference-check.pug", { title: "Add To Registry" });
-  } catch (e) {
-    res.render("error", { message: e.message, error: e });
-  }
-});
-
-router.route("/add-org").post(async (req, res) => {
-  try {
-    // Check if the provided reference exists in my database
-    const doc = await ReferenceService.getModelByReference(req.body.refr);
-    console.info("DOC->", doc);
-    if (!doc) throw new Error("Reference doesn't exist!");
-    // reference exists now time to see if it resolves from blockchain
-    const constructed_url =
-      process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
-    let response = await axios.get(constructed_url);
-    let data = {
-      refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
-      did: process.env.DID,
-    };
-    // did exists in the block chain now basically tell other party to add me
-    response = await axios.post(
-      doc.domain + "/federation-entry-acknowledgement",
-      data
-    );
-    if (!response.success) throw new Error("Failed to get acknowledgement!");
-    // Acknowledement received that other party added me to their registry
-    data = {
-      domain: doc.domain,
-      org: doc.organization,
-      did: req.body.did,
-    };
-
-    // Finally i'll add to my registry
-    response = await axios.post(process.env.FABRIC, data);
-    res.status(201).json({ success: true });
-  } catch (e) {
-    console.error(e.message);
-    res.status(400).json({ success: false, error: e.message });
-  }
-});
 
 // no frontend
 router.route("/federation-entry-acknowledgement").post(async (req, res) => {
@@ -368,15 +157,13 @@ router.route("/federation-entry-acknowledgement").post(async (req, res) => {
   }
 });
 
-/*                                 BASIC IDP                                 */
-
 /*                                 PART OF SP-IDP dance: SP                                 */
 
-router.get("/service-index", isAuthenticatedSP, function (req, res) {
-  res.render("service-index.pug", { user: req.session.user.user_email });
-});
+// router.get("/service-index", isAuthenticatedSP, function (req, res) {
+//   res.render("service-index.pug", { user: req.session.user.user_email });
+// });
 
-router.get("/service", isAuthenticatedSP, function (req, res) {
+router.get("/service", isAuthenticatedSP, function(req, res) {
   res.render("service.pug", { user: req.session.user.user_name });
 });
 
@@ -391,18 +178,17 @@ router
     }
   })
   .post((req, res) => {
-    console.log("PATH", req.url, "REQUEST BODY", req.body);
+    // console.log("PATH", req.url, "REQUEST BODY", req.body);
 
     if (req.session.user) {
-      console.log("INSIDE SERVICE REDIRECT CONDITION");
+      // console.log("INSIDE SERVICE REDIRECT CONDITION");
       res.redirect("/service");
     }
     const domain = req.protocol + "://" + req.get("host");
     const attributes = JSON.stringify(["Email", "Id", "Name"]);
     console.info("Domain", domain, "Attrs", attributes);
-    const redirectUrl = `${
-      req.body.reference_domain
-    }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
+    const redirectUrl = `${req.body.reference_domain
+      }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
     res.redirect(redirectUrl);
   });
 
@@ -411,7 +197,7 @@ router.get("/callback", (req, res) => {
   let data = Object.fromEntries(new URLSearchParams(queryString));
   const receivedHmac = data.hmac;
   delete data.hmac;
-  console.log("hash comparison", verifyHmac(data, receivedHmac));
+  console.log("hash comparison result->", verifyHmac(data, receivedHmac));
 
   // TODO: compare did from fabric
   if (data.did && data.Email && verifyHmac(data, receivedHmac)) {
@@ -432,15 +218,15 @@ router
   })
 
   .post(async (req, res) => {
-    const connection_state = req.body["state"];
-    const { rfc23_state } = req.body;
-    console.log("RFC23_state", rfc23_state);
-    console.log("Connection state", connection_state);
-    if (connection_state === "active" && rfc23_state === "completed") {
-      req.session.connection_id = req.body["connection_id"];
-      global_connection_id = req.body["connection_id"];
-    }
-    console.info("Session->", req.session.connection_id);
+    // const connection_state = req.body["state"];
+    // const { rfc23_state } = req.body;
+    // console.log("RFC23_state", rfc23_state);
+    // console.log("Connection state", connection_state);
+    // if (connection_state === "active" && rfc23_state === "completed") {
+    //   req.session.connection_id = req.body["connection_id"];
+    //   global_connection_id = req.body["connection_id"];
+    // }
+    // console.info("Session->", req.session.connection_id);
     console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });
 module.exports = router;
