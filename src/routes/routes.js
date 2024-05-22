@@ -171,7 +171,8 @@ router
   .route("/signup_with_idp")
   .get(async (req, res) => {
     try {
-      const references = await ReferenceService.getAll();
+      let references = await ReferenceService.getAll();
+      references = references.filter(issuer => issuer.isAdded);
       res.render("signup_with_idp.pug", { references, title: "References" });
     } catch (e) {
       res.render("error", { message: e.message, error: e });

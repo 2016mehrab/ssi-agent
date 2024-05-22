@@ -3,22 +3,18 @@ extends layout
 block content
   section
     header
-      h1 Welcome to Agent-1
-    form(id="myForm" action="/create-connection" method="POST")
-      fieldset 
-        legend Create a connection
-        div(class="form-group")
-          label(for="label") Your Label:
-          input(id="label" name="my_label" type="text" placeholder="Your Label")
-
-        div(class="form-group")
-          label(for="alias") Connection Alias:
-          input(id="alias" name="alias" type="text" placeholder="Provide a name for the connection")
-
-        div(class="form-group")
-          label(for="controller") Where to connect:
-          input(id="controller" name="agent_controller" type="text" placeholder="Other agent's controller url")
-
-        div(class="form-group")
-          input(type="submit" value="Submit")
-  script(type='text/javascript', src="/js/client.js")
+      h1 Welcome to Service Provider Ltd.
+  section
+    div.container
+      h2 Our Services
+      p We offer a variety of services to cater to your needs. Here are some of our popular services:
+      ul
+        li Service 1: Description of Service 1
+        li Service 2: Description of Service 2
+        li Service 3: Description of Service 3
+  section
+    div.container
+      h2 Contact Us
+      p Feel free to reach out to us for any queries or support.
+      p Email: support@serviceprovider.com
+      p Phone: +1234567890
