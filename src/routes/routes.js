@@ -302,15 +302,13 @@ router.route("/add-org").get(async (req, res) => {
   } catch (e) {
     res.render("error", { message: e.message, error: e });
   }
-});
-
-router.route("/add-org").post(async (req, res) => {
+}).post(async (req, res) => {
   try {
-    // Check if the provided reference exists in my database
+    // NOTE: Check if the provided reference exists in my database
     const doc = await ReferenceService.getModelByReference(req.body.refr);
     console.info("DOC->", doc);
     if (!doc) throw new Error("Reference doesn't exist!");
-    // reference exists now time to see if it resolves from blockchain
+    // NOTE: reference exists now time to check if it resolves from blockchain
     const constructed_url =
       process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
     let response = await axios.get(constructed_url);
@@ -318,51 +316,22 @@ router.route("/add-org").post(async (req, res) => {
       refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
       did: process.env.DID,
     };
-    // did exists in the block chain now basically tell other party to add me
+    // NOTE: did exists in the block chain now basically tell SP party to add me
     response = await axios.post(
       doc.domain + "/federation-entry-acknowledgement",
       data
     );
     if (!response.success) throw new Error("Failed to get acknowledgement!");
-    // Acknowledement received that other party added me to their registry
+    // NOTE: Acknowledement received that other party added me to their registry
     data = {
       domain: doc.domain,
       org: doc.organization,
       did: req.body.did,
     };
 
-    // Finally i'll add to my registry
+    // NOTE: Finally i'll add to my registry
     response = await axios.post(process.env.FABRIC, data);
     res.status(201).json({ success: true });
-  } catch (e) {
-    console.error(e.message);
-    res.status(400).json({ success: false, error: e.message });
-  }
-});
-
-// no frontend
-router.route("/federation-entry-acknowledgement").post(async (req, res) => {
-  try {
-    const doc = await ReferenceService.getModelByReference(req.body.refr);
-    if (!doc) throw new Error("Reference doesn't exist!");
-    // if the party is already added to registry then just send acknowledement
-    if (doc.isAdded) {
-      res.status(201).json({ success: true });
-    } else {
-      // otherwise resolving DID
-      const constructed_url =
-        process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
-      let response = await axios.get(constructed_url);
-      let data = {
-        domain: doc.domain,
-        org: doc.domain,
-        did: req.body.did,
-      };
-      // add to registry
-      response = await axios.post(process.env.FABRIC, data);
-      updateIsAdded = await ReferenceService.updateIsAdded(req.body.refr);
-      res.status(201).json({ success: true });
-    }
   } catch (e) {
     console.error(e.message);
     res.status(400).json({ success: false, error: e.message });
