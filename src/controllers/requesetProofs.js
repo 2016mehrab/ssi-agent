@@ -1,9 +1,10 @@
 require("dotenv").config();
 
-const { generateHmac, log,verifyHmac } = require("../../utils/index.js");
+const { generateHmac, log, verifyHmac } = require("../../utils/index.js");
 const axios = require("axios");
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
+const ReferenceService = require("../services/referenceService.js");
 
 exports.getProofRecords = async (req, res) => {
   try {
@@ -29,31 +30,31 @@ exports.getProofRecords = async (req, res) => {
 
 exports.requestProof = async (req, res) => {
   let response;
-  // response = await axios.get(my_server + "/set-connectionid");
+  const sp_profiles = await ReferenceService.getAll();
+  let source = req.body.source; // your source
+  let doesSourceExist = false;
+
+  // only check sp_profile if source field exists in the req body
+  if (source) {
+    sp_profiles.forEach(result => {
+      if (result.domain === source) {
+        doesSourceExist = true;
+        if (!result.isAdded) {
+          throw new Error(`${result.organization} has not been added to fabric!`)
+        }
+      }
+    });
+    if (!doesSourceExist) {
+      throw new Error(`There has been no agreement between ${source}`);
+    }
+  }
+
+
   let attrs = req.body.attributes.split(",");
-  // if(!req.session.connection_id){
-  //   res.redirect("/login");
-  // }
-
-  // const hmac = generateHmac(data);
-  // const queryString = Object.entries({ ...data, hmac })
-  //   .map(([key, value]) => `${key}=${value}`)
-  //   .join("&");
-
-  // console.log("queryString",queryString);
-
   attrs = attrs.map((e) => e.trim());
-  // console.info("REQUEST BODY", req.body);
   const schema_id = process.env.SCHEMA_ID;
   const attributes = JSON.parse(req.body.attributes);
-  // console.log("attributes after PARSE", attributes);
-  // Step 2: Split the attributes string into an array
-  // const attributesArray = attributes.split(", ").map((attr) => attr.trim());
-  // console.log("attributesArray", attributesArray);
-
-  // Step 3: Create an object for each attribute
   let requestedAttributes = {};
-  // attributesArray.forEach((attribute) => {
   attributes.forEach((attribute) => {
     requestedAttributes[attribute] = {
       name: attribute,
@@ -64,13 +65,10 @@ exports.requestProof = async (req, res) => {
       ],
     };
   });
-
-  // console.log("requested Attributes", JSON.stringify(requestedAttributes));
-
   let data = {
     connection_id: req.session.user.connection_id,
     trace: true,
-    auto_remove:true,
+    auto_remove: true,
     proof_request: {
       name: "Prove to IDP",
       version: "1.0",
@@ -79,8 +77,6 @@ exports.requestProof = async (req, res) => {
       requested_predicates: {},
     },
   };
-
-  // console.log("sent data will be", JSON.stringify(data));
   try {
     response = await axios.post(url + "/present-proof/send-request", data, {
       headers: {
@@ -89,42 +85,35 @@ exports.requestProof = async (req, res) => {
       },
     });
 
-    const maxAttempts = 20; // Number of attempts (1.5 per second)
+    const maxAttempts = 20; // Number of attempts (2.5 per second)
     let success = false;
     for (let i = 0; i < maxAttempts; i++) {
-      const statusResponse = await axios.get(my_server+ "/revealed-cred-status", {
+      const statusResponse = await axios.get(my_server + "/revealed-cred-status", {
         headers: {
           accept: "application/json",
         },
       });
-      // console.log("status response", statusResponse.data);
       if (statusResponse.data.success === true) {
         success = true;
-        // console.log("Inside condition" );
         break;
       }
-      // process.stdout.write("^");
-      await new Promise((resolve) => setTimeout(resolve, 2500)); 
+      await new Promise((resolve) => setTimeout(resolve, 2500));
     }
 
     if (!success) {
       throw new Error("Server error");
     }
 
-    // console.log("current request session-1", req.session.attributes);
-    // console.log("current request session-2", req.session.connection_id);
-    // console.log("current request session-3", req.session.revealed_attrs);
-    
-    log(req.originalUrl,req.session.revealed_attrs);
-    global_revealed_attrs.did=process.env.IDP_DID;
+    log(req.originalUrl, req.session.revealed_attrs);
+    global_revealed_attrs.did = process.env.IDP_DID;
     const hmac = generateHmac(global_revealed_attrs);
     const queryString = Object.entries({ ...global_revealed_attrs, hmac })
       .map(([key, value]) => `${key}=${value}`)
       .join("&");
+    let redirectURL = req.body.source + "/callback" + "?" + queryString;
+    // console.info("Source", req.body.source);
+    // console.info("Redirect Query String", redirectURL);
 
-    let redirectURL=req.body.source + "/callback" + "?" + queryString;
-    console.info("Redirect Query String", redirectURL);
-      
     res.redirect(redirectURL);
     // res.status(200).render("waiting.pug");
   } catch (e) {
@@ -132,7 +121,7 @@ exports.requestProof = async (req, res) => {
     console.log();
     console.log();
     // console.error("from",req.originalUrl,"error",e.message);
-    log(req.originalUrl,e.message)
+    log(req.originalUrl, e.message)
     // res.redirect("http://localhost:3003");
     res.status(500).render("error");
     // res.status(500).json({ message: e.message });
