@@ -23,7 +23,7 @@ exports.generateQRcode = async (req, res) => {
       data
     );
     const id = response.data["connection_id"];
-    const userdata = { email: connection_mail, connectionId: id };
+    const userdata = { email: connection_mail, connectionId: id, hasCredential: false };
     const inviteURL = JSON.stringify(response.data["invitation_url"], null, 4);
 
     await UserService.create(userdata);

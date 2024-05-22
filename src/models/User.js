@@ -15,6 +15,10 @@ const UserSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    hasCredential: {
+      type: Boolean,
+      required: true,
+    },
   },
   { timestamps: true }
 );

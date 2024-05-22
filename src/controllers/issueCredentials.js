@@ -5,6 +5,7 @@ const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const UserService = require("../services/UserService.js")
 
 exports.getAllIssueCredentials = async (req, res) => {
   try {
@@ -26,6 +27,7 @@ exports.getAllIssueCredentials = async (req, res) => {
   }
 };
 
+// WARN: THESE ARE NOT BEING USED
 exports.postIssueCredentialV1 = async (req, res) => {
   let response;
   console.log("postIssueCredentialV1 req body->", req.body);
@@ -90,24 +92,16 @@ exports.postIssueCredentialDynamic = async (req, res) => {
     let response;
     const id = uuidv4();
     console.log(req.originalUrl, " request body -> ", req.body);
-
-    console.log("connection session", req.session.connection_id)
-    console.log("connection global", global_connection_id)
-    // setting global connection_id
-    // response = await axios.get(`${my_server}/set-connectionid`);
-    // console.log("response body -> ", response.data);
-    // if (!response.data.success) throw new Error(response.data.error);
-
-    // Fetching credential definitions
+    // NOTE: Fetching credential definitions
     response = await axios.get(
       "http://localhost:8021/credential-definitions/created?schema_id=" +
-        encodeURIComponent(req.body.schema_id)
+      encodeURIComponent(req.body.schema_id)
     );
 
     const schemaIdParts = req.body.schema_id.split(":");
     const reqSchemaIdLastPart = schemaIdParts[schemaIdParts.length - 2];
 
-    // Filtering out the credential definition ID with the same tag as schema name
+    // NOTE: Filtering out the credential definition ID with the same tag as schema name
     const filteredCredentialId = response.data.credential_definition_ids.find(
       (id) => {
         const idParts = id.split(":");
@@ -116,19 +110,18 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       }
     );
 
-    let {schema_id ,...attr } = req.body;
+    let { schema_id, ...attr } = req.body;
     attr = Object.entries(attr).map(([k, v]) => ({
       name: k,
       value: v,
     }));
 
     attr.push({ name: "Id", value: id });
-    console.log("attr", attr);
     let data = {
       auto_issue: true,
       auto_remove: false,
       comment: "string",
-      connection_id: req.session.connection_id,
+      connection_id: req.session.user.connection_id,
       credential_preview: {
         "@type": "issue-credential/2.0/credential-preview",
         attributes: [...attr],
@@ -147,7 +140,6 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       trace: true,
     };
 
-    console.log("Data", data);
     response = await axios.post(url + "/issue-credential-2.0/send-offer", data, {
       headers: {
         accept: "application/json",
@@ -155,6 +147,9 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       },
     });
 
+    await UserService.updateHasCredentialByConnectionId(req.session.user.connection_id);
+
+    // NOTE: NEED TO REDIRECT TO A SUCCESS PAGE AFTER CRED BEING RECEIVED
     res.render("waiting.pug");
   } catch (error) {
     console.error(req.originalUrl, " -> ", error.message);
@@ -162,7 +157,7 @@ exports.postIssueCredentialDynamic = async (req, res) => {
   }
 };
 
-// VERSION 2.0
+// WARN: THESE ARE NOT BEING USED
 // TODO : Proper redirection
 exports.postIssueCredential = async (req, res) => {
   let response;

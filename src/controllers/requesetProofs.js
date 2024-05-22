@@ -5,6 +5,7 @@ const axios = require("axios");
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
+const UserService = require("../services/UserService.js");
 
 exports.getProofRecords = async (req, res) => {
   try {
@@ -30,54 +31,61 @@ exports.getProofRecords = async (req, res) => {
 
 exports.requestProof = async (req, res) => {
   let response;
-  const sp_profiles = await ReferenceService.getAll();
-  let source = req.body.source; // your source
-  let doesSourceExist = false;
-
-  // only check sp_profile if source field exists in the req body
-  if (source) {
-    sp_profiles.forEach(result => {
-      if (result.domain === source) {
-        doesSourceExist = true;
-        if (!result.isAdded) {
-          throw new Error(`${result.organization} has not been added to fabric!`)
-        }
-      }
-    });
-    if (!doesSourceExist) {
-      throw new Error(`There has been no agreement between ${source}`);
-    }
-  }
-
-
-  let attrs = req.body.attributes.split(",");
-  attrs = attrs.map((e) => e.trim());
-  const schema_id = process.env.SCHEMA_ID;
-  const attributes = JSON.parse(req.body.attributes);
-  let requestedAttributes = {};
-  attributes.forEach((attribute) => {
-    requestedAttributes[attribute] = {
-      name: attribute,
-      restrictions: [
-        {
-          schema_id: schema_id,
-        },
-      ],
-    };
-  });
-  let data = {
-    connection_id: req.session.user.connection_id,
-    trace: true,
-    auto_remove: true,
-    proof_request: {
-      name: "Prove to IDP",
-      version: "1.0",
-
-      requested_attributes: requestedAttributes,
-      requested_predicates: {},
-    },
-  };
   try {
+    const sp_profiles = await ReferenceService.getAll();
+    let source = req.body.source; // your source
+    let doesSourceExist = false;
+
+    // only check sp_profile if source field exists in the req body
+
+    if (source) {
+      sp_profiles.forEach(result => {
+        if (result.domain === source) {
+          doesSourceExist = true;
+          if (!result.isAdded) {
+            throw new Error(`${result.organization} has not been added to fabric!`)
+          }
+        }
+      });
+      if (!doesSourceExist) {
+        throw new Error(`There has been no agreement between ${source}`);
+      }
+    }
+
+    // TODO: check if the logged-in user has been given a credential
+    const user = await UserService.findByConnectionId(req.session.user.connection_id);
+    console.log(`user->`, user);
+    if (!user.hasCredential) {
+      throw new Error(`${req.session.user.user_name} has not been given any credential!`)
+    }
+
+    let attrs = req.body.attributes.split(",");
+    attrs = attrs.map((e) => e.trim());
+    const schema_id = process.env.SCHEMA_ID;
+    const attributes = JSON.parse(req.body.attributes);
+    let requestedAttributes = {};
+    attributes.forEach((attribute) => {
+      requestedAttributes[attribute] = {
+        name: attribute,
+        restrictions: [
+          {
+            schema_id: schema_id,
+          },
+        ],
+      };
+    });
+    let data = {
+      connection_id: req.session.user.connection_id,
+      trace: true,
+      auto_remove: true,
+      proof_request: {
+        name: "Prove to IDP",
+        version: "1.0",
+
+        requested_attributes: requestedAttributes,
+        requested_predicates: {},
+      },
+    };
     response = await axios.post(url + "/present-proof/send-request", data, {
       headers: {
         accept: "application/json",
@@ -104,7 +112,7 @@ exports.requestProof = async (req, res) => {
       throw new Error("Server error");
     }
 
-    log(req.originalUrl, req.session.revealed_attrs);
+    // log(req.originalUrl, req.session.revealed_attrs);
     global_revealed_attrs.did = process.env.IDP_DID;
     const hmac = generateHmac(global_revealed_attrs);
     const queryString = Object.entries({ ...global_revealed_attrs, hmac })
@@ -113,6 +121,7 @@ exports.requestProof = async (req, res) => {
     let redirectURL = req.body.source + "/callback" + "?" + queryString;
     // console.info("Source", req.body.source);
     // console.info("Redirect Query String", redirectURL);
+    global_revealed_attrs = {};
 
     res.redirect(redirectURL);
     // res.status(200).render("waiting.pug");
@@ -120,7 +129,6 @@ exports.requestProof = async (req, res) => {
     console.log();
     console.log();
     console.log();
-    // console.error("from",req.originalUrl,"error",e.message);
     log(req.originalUrl, e.message)
     // res.redirect("http://localhost:3003");
     res.status(500).render("error");
@@ -128,7 +136,7 @@ exports.requestProof = async (req, res) => {
   }
 };
 
-
+// WARN: NOT BEING USED
 exports.requestProofV2 = async (req, res) => {
   let response;
   response = await axios.get(my_server + "/set-connectionid");

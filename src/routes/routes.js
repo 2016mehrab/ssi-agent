@@ -4,13 +4,11 @@ require("dotenv").config();
 const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
-const UserService = require("../services/UserService.js");
 const {
   isAuthenticated,
   isAdmin,
 } = require("../middlewares/auth-middleware.js");
 
-const { log, generateHmac, verifyHmac } = require("../../utils/index.js");
 const {
   generateQRcode,
   reconnectWithEmail,
@@ -63,7 +61,6 @@ const {
   getRevealedCredStatus,
 } = require("../controllers/misc.js");
 
-const User = require("../models/User.js");
 
 /* GLOBAL */
 global.global_issuer_did = null;
@@ -154,7 +151,7 @@ router.route("/generate_invitation_page").get((req, res) => {
   }
 });
 
-router.route("/schema_def_page").get(isAdmin,(req, res) => {
+router.route("/schema_def_page").get(isAdmin, (req, res) => {
   try {
     res.status(200).render("schema.pug");
   } catch (e) {
@@ -164,7 +161,7 @@ router.route("/schema_def_page").get(isAdmin,(req, res) => {
 });
 
 // comes submit req from select_schema.pug
-router.route("/get-credential").post(isAuthenticated,async (req, res) => {
+router.route("/get-credential").post(isAuthenticated, async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
@@ -182,7 +179,7 @@ router.route("/get-credential").post(isAuthenticated,async (req, res) => {
   }
 });
 
-router.route("/select_schema").get(isAuthenticated,async (req, res) => {
+router.route("/select_schema").get(isAuthenticated, async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     res
@@ -194,26 +191,22 @@ router.route("/select_schema").get(isAuthenticated,async (req, res) => {
   }
 });
 
-router.route("/request_proofs").get(async (req, res) => {
-  let response;
-  try {
-    if (!req.session.connection_id) {
-      res.redirect("/login-page");
-    } else {
-      global_connection_id = req.session.connection_id;
+// TODO: Implement Request Proof from own website
+// router.route("/request_proofs").get(isAuthenticated,async (req, res) => {
+//   let response;
+//   try {
+//       global_connection_id = req.session.user.connection_id;
+//       response = await axios.get(my_server + "/schemas");
+//       res
+//         .status(200)
+//         .render("request_proofs.pug", { schema_names: response.data });
+//   } catch (e) {
+//     console.log(e.message);
+//     res.status(500).render("error.pug");
+//   }
+// });
 
-      response = await axios.get(my_server + "/schemas");
-      res
-        .status(200)
-        .render("request_proofs.pug", { schema_names: response.data });
-    }
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/agent_info_page").get(isAdmin,async (req, res) => {
+router.route("/agent_info_page").get(isAdmin, async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     const schemas = response.data;
@@ -264,18 +257,14 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 });
 /*                                 page render                                 */
 
-/*                                 BASIC SP                                 */
-
-/*                                 BASIC SP                                 */
-
 /*                                 BASIC IDP                                 */
 router.route("/user-profile").get(isAuthenticated, async (req, res) => {
-    res.render("user-profile.pug");
+  res.render("user-profile.pug");
 });
 
 router
   .route("/references")
-  .get(isAdmin,async (req, res) => {
+  .get(isAdmin, async (req, res) => {
     try {
       const references = await ReferenceService.getAll();
       res.render("reference-list.pug", { references, title: "References" });
@@ -286,8 +275,7 @@ router
   .post(async (req, res) => {
     try {
       console.log("REQ BODY", req.body);
-
-      const reference = await ReferenceService.create({
+      await ReferenceService.create({
         reference: req.body.refr,
         isAdded: false,
         domain: req.body.domain,
@@ -300,7 +288,7 @@ router
     }
   });
 
-router.route("/form").get(isAdmin,async (req, res) => {
+router.route("/form").get(isAdmin, async (req, res) => {
   try {
     res.render("reference-form.pug", { title: "Reference Form" });
   } catch (e) {
@@ -400,39 +388,6 @@ router
     console.log("Session Attributes", req.session.attributes);
     res.render("prove.pug", { source, attributes });
   })
-  .post(isAuthenticated, (req, res) => {
-    console.log("PROOF REQUEST BODY FROM SP", req.body);
-    // if (req.body.name === "eshan") {
-    //   const id = "20101498";
-    //   const did = "X2J134AM41TX2";
-    //   const email = "2016mehrab@gmail.com";
-    //   const gender = "Male";
-    //   const country = "Bangladesh";
-    //   const name = "Mehrab";
-    //   const data = {
-    //     email,
-    //     gender,
-    //     name,
-    //     country,
-    //     did,
-    //     id,
-    //   };
-    //   const hmac = generateHmac(data);
-    //   const queryString = Object.entries({ ...data, hmac })
-    //     .map(([key, value]) => `${key}=${value}`)
-    //     .join("&");
-
-    //   console.log(queryString);
-    //   res.redirect(req.body.source + "/callback" + "?" + queryString);
-    // }
-    // const hmac = generateHmac(data);
-    // const queryString = Object.entries({ ...data, hmac })
-    //   .map(([key, value]) => `${key}=${value}`)
-    //   .join("&");
-
-    // console.log(queryString);
-    // res.redirect(req.body.source + "/callback" + "?" + queryString);
-  });
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
 
@@ -444,7 +399,7 @@ router
     res.render("admin-login.pug");
   })
 
-  .post( async (req, res) => {
+  .post(async (req, res) => {
     const { name, password } = req.body;
     if (password === "admin") {
       req.session.admin = {
@@ -477,7 +432,6 @@ router
     const connection_state = req.body["state"];
     const { rfc23_state } = req.body;
     // console.log("RFC23_state", rfc23_state);
-    console.log("label state", req.body["their_label"]);
     if (connection_state === "active" && rfc23_state === "completed") {
       // req.session.user = {
       //   connection_id: req.body["connection_id"],
@@ -492,13 +446,14 @@ router
         global_revealed_attrs[attribute] =
           req.body.presentation.requested_proof.revealed_attrs[attribute].raw;
       });
-      req.session.revealed_attrs = global_revealed_attrs;
-    } else {
-      global_revealed_attrs = {};
-      req.session.revealed_attrs = null;
+      // req.session.revealed_attrs = global_revealed_attrs;
     }
+    // else {
+    //   global_revealed_attrs = {};
+    //   req.session.revealed_attrs = null;
+    // }
     console.log("Global revealed attrs", global_revealed_attrs);
-    console.log("session revealed attrs", req.session.revealed_attrs);
+    // console.log("session revealed attrs", req.session.revealed_attrs);
     // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });
 module.exports = router;
