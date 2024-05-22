@@ -23,7 +23,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 180 }),
     cookie: {
-      maxAge: 3 * 60 * 1000, 
+      maxAge: 3 * 60 * 1000,
     },
   })
 );
@@ -32,6 +32,9 @@ app.use(routes);
 
 app.get("/", (req, res) => {
   res.render("home");
+});
+app.use(function(req, res, next) {
+  res.status(404).render('404.pug');
 });
 
 async function connectToMongoose() {
