@@ -112,6 +112,7 @@ exports.requestProof = async (req, res) => {
       throw new Error("Server error");
     }
 
+    console.log(req.originalUrl, "REVEALED ATTRS", global_revealed_attrs);
     // log(req.originalUrl, req.session.revealed_attrs);
     global_revealed_attrs.did = process.env.IDP_DID;
     const hmac = generateHmac(global_revealed_attrs);

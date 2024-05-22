@@ -45,7 +45,8 @@ exports.reconnectWithEmail = async (req, res) => {
   const connection_mail = req.body.email;
 
   try {
-    // Check if user with the same email already exists
+    global_revealed_attrs = {};
+    // NOTE: Check if user with the same email already exists
     const existingUser = await UserService.findByEmail(connection_mail);
     if (!existingUser) {
       throw new Error("User with this email already exists");
@@ -54,6 +55,7 @@ exports.reconnectWithEmail = async (req, res) => {
       connection_id: existingUser.connectionId,
       user_name: existingUser.email.split("@")[0],
     };
+
     const redirectTo = req.session.returnTo || "/user-profile";
     delete req.session.returnTo;
     res.status(200).json({ success: true, redirect: redirectTo });

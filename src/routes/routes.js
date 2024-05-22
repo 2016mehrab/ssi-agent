@@ -421,7 +421,7 @@ router
     //   global_revealed_attrs = {};
     //   req.session.revealed_attrs = null;
     // }
-    console.log("Global revealed attrs", global_revealed_attrs);
+    console.log(req.originalUrl, "global revealed attrs", global_revealed_attrs);
     // console.log("session revealed attrs", req.session.revealed_attrs);
     // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });

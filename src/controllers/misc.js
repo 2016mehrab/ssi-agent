@@ -85,7 +85,7 @@ exports.sendProof = async (req, res) => {
   try {
     response = await axios.post(
       url +
-        `/present-proof-2.0/records/${req.body.pres_ex_id}/send-presentation`,
+      `/present-proof-2.0/records/${req.body.pres_ex_id}/send-presentation`,
       proof,
       {
         headers: {
@@ -153,12 +153,13 @@ exports.getConnectionStatus = async (req, res) => {
   }
 };
 
+// NOTE: route '/revealed-cred-status'
 exports.getRevealedCredStatus = async (req, res) => {
 
-  if (!global_revealed_attrs.Email) {
-    res.status(200).json({success:false});
+  if (Object.keys(global_revealed_attrs).length === 0) {
+    res.status(200).json({ success: false });
   } else {
-    res.status(200).json({success:true});
+    res.status(200).json({ success: true });
   }
 };
 
