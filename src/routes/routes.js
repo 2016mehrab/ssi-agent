@@ -146,7 +146,7 @@ router.route("/federation-entry-acknowledgement").post(async (req, res) => {
       };
       // add to registry
       response = await axios.post(process.env.FABRIC, data);
-      updateIsAdded = await ReferenceService.updateIsAdded(req.body.refr);
+      await ReferenceService.updateIsAdded(req.body.refr);
       res.status(201).json({ success: true });
     }
   } catch (e) {
@@ -202,11 +202,11 @@ router
   .route("/signup_with_idp")
   .get(async (req, res) => {
     try {
-    if (req.session.user) {
-      // console.log("INSIDE SERVICE REDIRECT CONDITION");
-      res.redirect("/service");
-      return;
-    }
+      if (req.session.user) {
+        // console.log("INSIDE SERVICE REDIRECT CONDITION");
+        res.redirect("/service");
+        return;
+      }
       let references = await ReferenceService.getAll();
       references = references.filter(issuer => issuer.isAdded);
       res.render("signup_with_idp.pug", { references, title: "References" });
