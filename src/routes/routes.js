@@ -5,8 +5,8 @@ const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
 const {
-  isAuthenticated,
   isAuthenticatedSP,
+  isAdmin
 } = require("../middlewares/auth-middleware.js");
 
 const { generateHmac, verifyHmac, log } = require("../../utils/index.js");
@@ -60,8 +60,6 @@ const {
   setConnectionId,
   resolvePublicDid,
 } = require("../controllers/misc.js");
-
-const User = require("../models/User.js");
 
 /* GLOBAL */
 global.global_issuer_did = null;
@@ -157,6 +155,39 @@ router.route("/federation-entry-acknowledgement").post(async (req, res) => {
   }
 });
 
+router
+  .route("/references")
+  .get(isAdmin, async (req, res) => {
+    try {
+      const references = await ReferenceService.getAll();
+      res.render("reference-list.pug", { references, title: "References" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      console.log("REQ BODY", req.body);
+      await ReferenceService.create({
+        reference: req.body.refr,
+        isAdded: false,
+        domain: req.body.domain,
+        organization: req.body.org,
+      });
+      res.status(201).json({ success: true });
+    } catch (e) {
+      console.error(e);
+      res.status(400).json({ success: false });
+    }
+  });
+
+router.route("/form").get(isAdmin, async (req, res) => {
+  try {
+    res.render("reference-form.pug", { title: "Reference Form" });
+  } catch (e) {
+    res.render("error", { message: e.message, error: e });
+  }
+});
 /*                                 PART OF SP-IDP dance: SP                                 */
 
 // router.get("/service-index", isAuthenticatedSP, function (req, res) {
@@ -171,6 +202,11 @@ router
   .route("/signup_with_idp")
   .get(async (req, res) => {
     try {
+    if (req.session.user) {
+      // console.log("INSIDE SERVICE REDIRECT CONDITION");
+      res.redirect("/service");
+      return;
+    }
       let references = await ReferenceService.getAll();
       references = references.filter(issuer => issuer.isAdded);
       res.render("signup_with_idp.pug", { references, title: "References" });
@@ -184,6 +220,7 @@ router
     if (req.session.user) {
       // console.log("INSIDE SERVICE REDIRECT CONDITION");
       res.redirect("/service");
+      return;
     }
     const domain = req.protocol + "://" + req.get("host");
     const attributes = JSON.stringify(["Email", "Id", "Name"]);
@@ -209,6 +246,43 @@ router.get("/callback", (req, res) => {
     res.send("Tampered data");
   }
 });
+
+router.route("/logout").get((req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.redirect("/");
+    }
+    // NOTE: Clear the cookie
+    res.clearCookie("connect.sid");
+    // NOTE: Redirect to the home page
+    res.redirect("/");
+  });
+});
+
+/*                                  User                                 */
+router.route("/user-profile").get(isAuthenticatedSP, async (req, res) => {
+  res.render("user-profile.pug");
+});
+
+/*                                  Admin                                 */
+
+router
+  .route("/admin-login")
+  .get((req, res) => {
+    res.render("admin-login.pug");
+  })
+
+  .post(async (req, res) => {
+    const { name, password } = req.body;
+    if (password === "admin") {
+      req.session.admin = {
+        name: name,
+      };
+      res.redirect("/references");
+      return;
+    }
+    res.redirect("/admin-login");
+  });
 
 /*                                 PART OF SP-IDP dance: SP                                 */
 

@@ -1,0 +1,64 @@
+extends layout
+
+block content
+  section
+    header
+      h2 Welcome #{userName}
+    br
+    </section>
+
+    <hr />
+    <section>
+        <header>
+            <h2 id="Tables">Tables</h2>
+        </header>
+        <table>
+            <caption>
+                Traditional colors of Japan
+            </caption>
+            <tfoot>
+            <tr>
+                <th colspan="5"><a href="https://en.wikipedia.org/wiki/Traditional_colors_of_Japan" target="_blank">Source: Wikipedia</a></th>
+            </tr>
+            </tfoot>
+            <tbody>
+            <thead>
+                <tr>
+                    <th>Japanese name</th>
+                    <th>Romanized</th>
+                    <th>English translation</th>
+                    <th>RGB</th>
+                    <th>Hex triplet</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>一斤染</td>
+                <td>Ikkonzome</td>
+                <td>One kin (0.6&nbsp;kg (1.3&nbsp;lb)) dye</td>
+                <td>240,143,144</td>
+                <td>#F08F90</td>
+            </tr>
+            <tr>
+                <td>紅梅色</td>
+                <td>Kōbai-iro</td>
+                <td>Red plum colored</td>
+                <td>219,90,107</td>
+                <td>#DB5A6B</td>
+            </tr>
+            <tr>
+                <td>桜色</td>
+                <td>Sakura-iro</td>
+                <td>Cherry blossom color</td>
+                <td>252,201,185</td>
+                <td>#FCC9B9</td>
+            </tr>
+            <tr>
+                <td>薄紅</td>
+                <td>Usubeni</td>
+                <td>Pale crimson (dye)</td>
+                <td>242,102,108</td>
+                <td>#F2666C</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>

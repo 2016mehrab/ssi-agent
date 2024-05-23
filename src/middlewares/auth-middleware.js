@@ -1,18 +1,18 @@
-module.exports.isAuthenticated = (req, res, next) => {
-  if (req.session.connection_id) {
+module.exports.isAdmin = (req, res, next) => {
+  if (req.session.admin) {
+    res.locals.adminName = req.session.admin.name;
     next();
   } else {
-    // res.status(401).send('You are not authorized to view this page');
     req.session.returnTo = req.originalUrl;
-    res.redirect('/login');
+    res.redirect('/admin-login');
   }
 };
 
 module.exports.isAuthenticatedSP = (req, res, next) => {
   if (req.session.user) {
+    res.locals.userName = req.session.user.user_name;
     next();
   } else {
-    req.session.returnTo = req.originalUrl;
     res.redirect('/signup_with_idp');
   }
 };

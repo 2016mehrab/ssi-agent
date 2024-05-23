@@ -13,14 +13,24 @@ html
               a.no-style(href="/") SP
           nav.terminal-menu
             ul
-              //- li
-              //-   a.menu-item(href="/references") Reference-list
-              //- li
-              //-   a.menu-item(href="/form") Reference-form
-              //- li
-              //-   a.menu-item(href="/add-org") Add Organization
-              li
-                a.menu-item(href="/signup_with_idp") Access Service
+              if adminName
+                li
+                  a.menu-item(href="/references" class=currentPath === '/references' ? 'active' : '') References
+                li
+                  a.menu-item(href="/form" class=currentPath === '/form' ? 'active' : '') Add Reference
+              if !adminName && userName
+                li
+                  a.menu-item(href="/user-profile" class=currentPath === '/user-profile' ? 'active' : '') #{userName ? userName : 'user'}
+              if adminName || userName
+                li
+                  a.menu-item(href="/logout") Logout
+              if adminName || userName
+                li
+                  a.menu-item(href="/service") Access Service
+              else
+                li
+                  a.menu-item(href="/signup_with_idp" ) Access Service
+
         hr
       block content
       div(class="footer-container")
