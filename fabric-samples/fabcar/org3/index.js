@@ -76,4 +76,17 @@ app.post('/create', function (req, res) {
 //     })
 // })
 
-app.listen(3000, () => console.log('Server is running at port 3000'))
+// check did
+app.get('/check-did', function (req, res) {
+    query.main(req.query)
+        .then(result => {
+            res.json({ exists: result });
+        })
+        .catch(err => {
+            console.error({ err });
+            res.status(500).json({ exists: false });
+        });
+});
+
+
+app.listen(3000, () => console.log('Server is running at port 3012'))

@@ -27,16 +27,23 @@ else
 	exit 1
 fi
 
-# clean out any old identites in the wallets
-rm -rf javascript/wallet/*
-rm -rf java/wallet/*
-rm -rf typescript/wallet/*
-rm -rf go/wallet/*
+# # clean out any old identites in the wallets
+rm -rf org1/wallet/*
+rm -rf org2/wallet/*
+rm -rf org3/wallet/*
+# rm -rf java/wallet/*
+# rm -rf typescript/wallet/*
+# rm -rf go/wallet/*
 
 # launch network; create channel and join peer to channel
+
 pushd ../test-network
-./network.sh down
 ./network.sh up createChannel -ca -s couchdb
+popd
+pushd ../test-network/addOrg3
+./addOrg3.sh up
+popd
+pushd ../test-network
 ./network.sh deployCC -ccn federation -ccv 1 -cci initLedger -ccl ${CC_SRC_LANGUAGE} -ccp ${CC_SRC_PATH}
 popd
 

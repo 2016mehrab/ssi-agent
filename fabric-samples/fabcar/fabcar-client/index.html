@@ -26,12 +26,12 @@
         <form id="createForm" action="" name="createCar">
             <div>
                 <label for="">DID/Key</label>
-                <input name="key" />
+                <input name="did" />
             </div>
             
             <div>
                 <label for="">Organization</label>
-                <input name="orgName" />
+                <input name="org" />
             </div>
 
             <div>
@@ -121,12 +121,23 @@
         // });
 
 
-        //SEARCH DATA
-        function search(){
+        // SEARCH DATA
+        function search() {
             // extracting value from input field
-            const value = document.getElementById('search-input').value
-            getAll( value )
+            const value = document.getElementById('search-input').value;
+            const api = value ? `http://localhost:3000/check-did?key=${value}` : 'http://localhost:3000/check-did';
+            fetch(api)
+                .then(res => res.json())
+                .then(parsedRes => {
+                    console.log(parsedRes.exists);
+                })
+                .catch(err => {
+                    alert('Operation failed');
+                    console.error({ err });
+                });
         }
+
+
         
         // GETTING ALL CAR DATA FROM API
         function getAll( query ){

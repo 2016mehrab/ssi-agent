@@ -11,11 +11,11 @@ const path = require('path');
 const fs = require('fs');
 
 
-async function main( queryData ) {
+async function main( params ) {
     try {
         // load the network configuration
-        const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', 'org1.example.com', 'connection-org1.json');
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
+        const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', 'org3.example.com', 'connection-org3.json');
+        let ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
         // Create a new file system based wallet for managing identities.
         const walletPath = path.join(process.cwd(), 'wallet');
@@ -38,28 +38,21 @@ async function main( queryData ) {
         const network = await gateway.getNetwork('mychannel');
 
         // Get the contract from the network.
-        const contract = network.getContract('federation');
+        const contract = network.getContract('fabcar');
+        const key = params.key
+        const newOwner = params.owner
 
-        /// IF QUERY DATA IS AVAILABLE
-        if( queryData.key ){
+        // Submit the specified transaction.
+        // changeCarOwner transaction - requires 2 args , ex: ('changeCarOwner', 'CAR12', 'Dave')
+        await contract.submitTransaction('changeCarOwner', `${ key }`, `${ newOwner }`)
+        console.log('Change Owner Transaction has been submitted');
 
-            const queryResult =  await contract.evaluateTransaction('queryCar', `${ queryData.key }`);
-            console.log(`QUERY Transaction has been evaluated, result is: ${queryResult.toString()}`)
-
-            return queryResult
-         }
-
-        // Evaluate the specified transaction.
-        // queryAllCars transaction - requires no arguments, ex: ('queryAllCars')
-        const result = await contract.evaluateTransaction('queryAllCars');
-        console.log(`Transaction has been evaluated, result is: ${result.toString()}`);
         // Disconnect from the gateway.
-        await gateway.disconnect()
-        
-        return result
-        
-    } catch (error) {
-        console.error(`Failed to evaluate transaction: ${error}`);
+        await gateway.disconnect();
+
+    } 
+    catch (error) {
+        console.error(`Failed to change owner transaction: ${error}`);
         process.exit(1);
     }
 }
