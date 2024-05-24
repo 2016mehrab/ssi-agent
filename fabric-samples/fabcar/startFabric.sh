@@ -40,9 +40,9 @@ rm -rf org3/wallet/*
 pushd ../test-network
 ./network.sh up createChannel -ca -s couchdb
 popd
-pushd ../test-network/addOrg3
-./addOrg3.sh up
-popd
+# pushd ../test-network/addOrg3
+# ./addOrg3.sh up
+# popd
 pushd ../test-network
 ./network.sh deployCC -ccn federation -ccv 1 -cci initLedger -ccl ${CC_SRC_LANGUAGE} -ccp ${CC_SRC_PATH}
 popd
