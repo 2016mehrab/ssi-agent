@@ -331,6 +331,7 @@ router.route("/add-org").get(async (req, res) => {
 
     // NOTE: Finally i'll add to my registry
     response = await axios.post(process.env.FABRIC, data);
+    await ReferenceService.updateIsAdded(req.body.refr);
     res.status(201).json({ success: true });
   } catch (e) {
     console.error(e.message);
