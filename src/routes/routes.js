@@ -321,7 +321,7 @@ router.route("/add-org").get(async (req, res) => {
       doc.domain + "/federation-entry-acknowledgement",
       data
     );
-    if (!response.success) throw new Error("Failed to get acknowledgement!");
+    if (!response.data.success) throw new Error("Failed to get acknowledgement!");
     // NOTE: Acknowledement received that other party added me to their registry
     data = {
       domain: doc.domain,
