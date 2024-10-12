@@ -4,8 +4,11 @@
 AGENT_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="agent") | .public_url')
 CONTROLLER_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="controller") | .public_url')
 CONTROLLER_TUNNEL="${CONTROLLER_TUNNEL}/webhooks"
-SEED="eshan000000000000000000000000000"
+SEED="eshan111111111111111111111111112"
 
+# Seed: eshan111111111111111111111111111
+# DID: 2fQiCWu29TdhH7fPp3octb
+# Verkey: uYfzE22qSukP8a1egCd6D5oQUXv99VzU9jmsMVfCVGo
 
 # LATEST SEED
 # Seed: eshan000000000000000000000000000
@@ -16,16 +19,17 @@ SEED="eshan000000000000000000000000000"
 # Winxp --seed Mehrab00000000000000000000000000 \
 # Docker --seed fakeMehrab0000000000000000000000 \
 # Define the command
+
 CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --label basic-idp \
    --inbound-transport http 0.0.0.0 8020 \
    --outbound-transport http \
    --admin 0.0.0.0 8021 \
    --admin-insecure-mode \
+   --auto-provision \
    --wallet-type askar \
-   --wallet-name IDPWALLET \
-   --wallet-key idpwalletsecret \
-   --recreate-wallet
+   --wallet-name eshan26112 \
+   --wallet-key eshanwsecret \
    --preserve-exchange-records \
    --genesis-url http://test.bcovrin.vonx.io/genesis \
    --trace-target log \

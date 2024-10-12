@@ -10,6 +10,7 @@ CONTROLLER_TUNNEL="${CONTROLLER_TUNNEL}/webhooks"
 # Docker --seed fakeMehrab0000000000000000000000 \
 # Define the command
 # --auto-provision use this flag when building wallet for the first time
+# --recreate-wallet can cause `aries_cloudagent.config.base.ConfigError: New seed provided which doesn't match the registered public did SY68Ddhb22o58gdrbXQYKB` kind of error
 
 CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --label IDP \
