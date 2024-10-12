@@ -9,6 +9,8 @@ CONTROLLER_TUNNEL="${CONTROLLER_TUNNEL}/webhooks"
 # Winxp --seed Mehrab00000000000000000000000000 \
 # Docker --seed fakeMehrab0000000000000000000000 \
 # Define the command
+# --auto-provision use this flag when building wallet for the first time
+
 CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --label IDP \
    --inbound-transport http 0.0.0.0 8020 \
