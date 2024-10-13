@@ -4,7 +4,7 @@ module.exports.isAdmin = (req, res, next) => {
     next();
   } else {
     req.session.returnTo = req.originalUrl;
-    res.redirect('/admin-login');
+    res.redirect("/admin-login");
   }
 };
 
@@ -13,16 +13,15 @@ module.exports.isAuthenticatedSP = (req, res, next) => {
     res.locals.userName = req.session.user.user_name;
     next();
   } else {
-    res.redirect('/generate_invitation_page');
+    res.redirect("/generate_invitation_page");
   }
 };
 
 module.exports.isAuthenticatedForService = (req, res, next) => {
-  if (req.session.user ) {
+  if (req.session.user && req.session.attributes_revealed) {
     // res.locals.userName = req.session.user.name;
-    res.locals.userName = req.session.user.user_name;
     next();
   } else {
-    res.redirect('/prove');
+    res.redirect("/prove");
   }
 };

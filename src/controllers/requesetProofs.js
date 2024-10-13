@@ -190,9 +190,9 @@ exports.requestProofV2 = async (req, res) => {
       ],
     };
   });
-  console.log("requestedAttributes", requestedAttributes);
+  // console.log("requestedAttributes", requestedAttributes);
 
-  console.log("seesssion", req.session?.user);
+  // console.log("seesssion", req.session?.user);
 
   let packet = {
     auto_remove: false,
@@ -225,11 +225,10 @@ exports.requestProofV2 = async (req, res) => {
         },
       }
     );
-    response = await axios.post("/revealed-cred-status");
-    if (!response.data.success) throw new Error("Fail to get attributes");
-    console.log(req.originalUrl, "REVEALED ATTRS", global_revealed_attrs);
-    res.status(200).render("waiting.pug");
+    
+    res.status(200).render("waiting-for-proof.pug");
   } catch (e) {
+    console.log(e.message);
     res.status(400).render("error.pug");
     // res.status(500).json({ message: e.message });
   }

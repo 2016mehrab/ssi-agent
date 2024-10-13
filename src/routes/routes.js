@@ -292,6 +292,7 @@ router.route("/logout").get((req, res) => {
     }
     // NOTE: Clear the cookie
     res.clearCookie("connect.sid");
+    global_revealed_attrs={};
     // NOTE: Redirect to the home page
     res.redirect("/");
   });
@@ -384,7 +385,6 @@ router
 
       let x = ["name", "issuer"];
       x.forEach((attr) => {
-        console.log('attr inside x', attr)
         global_revealed_attrs[attr] =
           req.body?.by_format?.pres?.indy?.requested_proof?.revealed_attrs[
             attr

@@ -159,6 +159,7 @@ exports.getRevealedCredStatus = async (req, res) => {
   if (Object.keys(global_revealed_attrs).length === 0) {
     res.status(200).json({ success: false });
   } else {
+    req.session.attributes_revealed= true;
     res.status(200).json({ success: true });
   }
 };
