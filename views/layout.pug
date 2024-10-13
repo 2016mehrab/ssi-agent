@@ -1,7 +1,7 @@
 doctype html
 html
   head
-    title Service Provider
+    title Jatiyo Sheba
     link(rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css")
     link(rel="stylesheet" href="/stylesheets/custom.css")
   body
@@ -10,14 +10,9 @@ html
         div.terminal-nav
           div.terminal-logo
             div.logo.terminal-prompt
-              a.no-style(href="/") SP
+              a.no-style(href="/") Jatiyo Sheba
           nav.terminal-menu
             ul
-              if adminName
-                li
-                  a.menu-item(href="/references" class=currentPath === '/references' ? 'active' : '') References
-                li
-                  a.menu-item(href="/form" class=currentPath === '/form' ? 'active' : '') Add Reference
               if !adminName && userName
                 li
                   a.menu-item(href="/user-profile" class=currentPath === '/user-profile' ? 'active' : '') #{userName ? userName : 'user'}
@@ -36,4 +31,4 @@ html
       div(class="footer-container")
         hr
         footer
-          p © 2024 Service Provider Ltd.
+          p © 2024 Jatiyo Sheba

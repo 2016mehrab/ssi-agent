@@ -268,100 +268,6 @@ router.route("/user-profile").get(isAuthenticated, async (req, res) => {
   res.render("user-profile.pug");
 });
 
-router
-  .route("/references")
-  .get(isAdmin, async (req, res) => {
-    try {
-      const references = await ReferenceService.getAll();
-      res.render("reference-list.pug", { references, title: "References" });
-    } catch (e) {
-      res.render("error", { message: e.message, error: e });
-    }
-  })
-  .post(async (req, res) => {
-    try {
-      console.log("REQ BODY", req.body);
-      await ReferenceService.create({
-        reference: req.body.refr,
-        isAdded: false,
-        domain: req.body.domain,
-        organization: req.body.org,
-      });
-      res.status(201).json({ success: true });
-    } catch (e) {
-      console.error(e);
-      res.status(400).json({ success: false });
-    }
-  });
-
-router.route("/form").get(isAdmin, async (req, res) => {
-  try {
-    res.render("reference-form.pug", { title: "Reference Form" });
-  } catch (e) {
-    res.render("error", { message: e.message, error: e });
-  }
-});
-
-router
-  .route("/add-org")
-  .get(async (req, res) => {
-    try {
-      res.render("reference-check.pug", { title: "Add To Registry" });
-    } catch (e) {
-      res.render("error", { message: e.message, error: e });
-    }
-  })
-  .post(async (req, res) => {
-    try {
-      // NOTE: Check if the provided reference exists in my database
-      const doc = await ReferenceService.getModelByReference(req.body.refr);
-      console.info("DOC->", doc);
-      if (!doc) throw new Error("Reference doesn't exist!");
-      // NOTE: reference exists now time to check if it resolves from blockchain
-
-// no frontend
-router.route("/federation-entry-acknowledgement").post(async (req, res) => {
-  try {
-    const doc = await ReferenceService.getModelByReference(req.body.refr);
-    if (!doc) throw new Error("Reference doesn't exist!");
-    // if the party is already added to registry then just send acknowledement
-    if (doc.isAdded) {
-      res.status(201).json({ success: true });
-    } else {
-      // otherwise resolving DID
-      const constructed_url =
-        process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
-      let response = await axios.get(constructed_url);
-      let data = {
-        refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
-        did: process.env.DID,
-      };
-      // NOTE: did exists in the block chain now basically tell SP party to add me
-      response = await axios.post(
-        doc.domain + "/federation-entry-acknowledgement",
-        data
-      );
-      if (!response.data.success)
-        throw new Error("Failed to get acknowledgement!");
-      // NOTE: Acknowledement received that other party added me to their registry
-      data = {
-        domain: doc.domain,
-        org: doc.organization,
-        did: req.body.did,
-      };
-
-      // NOTE: Finally i'll add to my registry
-      response = await axios.post(process.env.FABRIC, data);
-      await ReferenceService.updateIsAdded(req.body.refr);
-      res.status(201).json({ success: true });
-    } catch (e) {
-      console.error(e.message);
-      res.status(400).json({ success: false, error: e.message });
-    }
-  });
-
-/*                                 BASIC IDP                                 */
-
 /*                                 PART OF SP-IDP dance: IDP                                 */
 
 router.route("/prove").get((req, res) => {
@@ -380,18 +286,6 @@ router.route("/prove").get((req, res) => {
   res.render("prove.pug");
 });
 
-router.route("/form").get(isAdmin, async (req, res) => {
-  try {
-    res.render("reference-form.pug", { title: "Reference Form" });
-  } catch (e) {
-    res.render("error", { message: e.message, error: e });
-  }
-});
-/*                                 PART OF SP-IDP dance: SP                                 */
-
-// router.get("/service-index", isAuthenticatedSP, function (req, res) {
-//   res.render("service-index.pug", { user: req.session.user.user_email });
-// });
 
 router.get("/service", isAuthenticatedSP, function(req, res) {
   res.render("service.pug", { user: req.session.user.user_name });
