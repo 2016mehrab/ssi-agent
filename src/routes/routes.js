@@ -61,7 +61,6 @@ const {
   getRevealedCredStatus,
 } = require("../controllers/misc.js");
 
-
 /* GLOBAL */
 global.global_issuer_did = null;
 global.global_connection_status = null;
@@ -86,6 +85,7 @@ router
   .get(async (req, res) => {
     try {
       res.status(200).render("reconnect.pug");
+      // res.status(200).render("NID-form.pug");
     } catch (e) {
       console.log(e.message);
       res.status(500).render("error.pug");
@@ -179,7 +179,7 @@ router.route("/get-credential").post(isAuthenticated, async (req, res) => {
   }
 });
 
-router.route("/select_schema").get(isAuthenticated, async (req, res) => {
+router.route("/select_schema").get(isAdmin, async (req, res) => {
   try {
     let response = await axios.get(my_server + "/schemas");
     res
@@ -192,19 +192,24 @@ router.route("/select_schema").get(isAuthenticated, async (req, res) => {
 });
 
 // TODO: Implement Request Proof from own website
-// router.route("/request_proofs").get(isAuthenticated,async (req, res) => {
-//   let response;
-//   try {
-//       global_connection_id = req.session.user.connection_id;
-//       response = await axios.get(my_server + "/schemas");
-//       res
-//         .status(200)
-//         .render("request_proofs.pug", { schema_names: response.data });
-//   } catch (e) {
-//     console.log(e.message);
-//     res.status(500).render("error.pug");
-//   }
-// });
+router.route("/request_proofs").get(isAuthenticated, async (req, res) => {
+  let response;
+  try {
+    global_connection_id = req.session.user.connection_id;
+    console.log("connection_id", global_connection_id);
+    response = await axios.get(my_server + "/schemas");
+    res
+      .status(200)
+      .render("request_proofs.pug", { schema_names: response.data });
+  } catch (e) {
+    console.log(e.message);
+    res.status(500).render("error.pug");
+  }
+});
+
+router.route("/issue_cred_page").get(isAdmin, (req, res) => {
+  res.status(200).render("NID-form.pug");
+});
 
 router.route("/agent_info_page").get(isAdmin, async (req, res) => {
   try {
@@ -296,68 +301,72 @@ router.route("/form").get(isAdmin, async (req, res) => {
   }
 });
 
-router.route("/add-org").get(async (req, res) => {
-  try {
-    res.render("reference-check.pug", { title: "Add To Registry" });
-  } catch (e) {
-    res.render("error", { message: e.message, error: e });
-  }
-}).post(async (req, res) => {
-  try {
-    // NOTE: Check if the provided reference exists in my database
-    const doc = await ReferenceService.getModelByReference(req.body.refr);
-    console.info("DOC->", doc);
-    if (!doc) throw new Error("Reference doesn't exist!");
-    // NOTE: reference exists now time to check if it resolves from blockchain
-    const constructed_url =
-      process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
-    let response = await axios.get(constructed_url);
-    let data = {
-      refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
-      did: process.env.DID,
-    };
-    // NOTE: did exists in the block chain now basically tell SP party to add me
-    response = await axios.post(
-      doc.domain + "/federation-entry-acknowledgement",
-      data
-    );
-    if (!response.data.success) throw new Error("Failed to get acknowledgement!");
-    // NOTE: Acknowledement received that other party added me to their registry
-    data = {
-      domain: doc.domain,
-      org: doc.organization,
-      did: req.body.did,
-    };
+router
+  .route("/add-org")
+  .get(async (req, res) => {
+    try {
+      res.render("reference-check.pug", { title: "Add To Registry" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      // NOTE: Check if the provided reference exists in my database
+      const doc = await ReferenceService.getModelByReference(req.body.refr);
+      console.info("DOC->", doc);
+      if (!doc) throw new Error("Reference doesn't exist!");
+      // NOTE: reference exists now time to check if it resolves from blockchain
+      const constructed_url =
+        process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
+      let response = await axios.get(constructed_url);
+      let data = {
+        refr: process.env.MYREFRENCE_PREVIOUSLY_SHARED_WITH_OTHER,
+        did: process.env.DID,
+      };
+      // NOTE: did exists in the block chain now basically tell SP party to add me
+      response = await axios.post(
+        doc.domain + "/federation-entry-acknowledgement",
+        data
+      );
+      if (!response.data.success)
+        throw new Error("Failed to get acknowledgement!");
+      // NOTE: Acknowledement received that other party added me to their registry
+      data = {
+        domain: doc.domain,
+        org: doc.organization,
+        did: req.body.did,
+      };
 
-    // NOTE: Finally i'll add to my registry
-    response = await axios.post(process.env.FABRIC, data);
-    await ReferenceService.updateIsAdded(req.body.refr);
-    res.status(201).json({ success: true });
-  } catch (e) {
-    console.error(e.message);
-    res.status(400).json({ success: false, error: e.message });
-  }
-});
+      // NOTE: Finally i'll add to my registry
+      response = await axios.post(process.env.FABRIC, data);
+      await ReferenceService.updateIsAdded(req.body.refr);
+      res.status(201).json({ success: true });
+    } catch (e) {
+      console.error(e.message);
+      res.status(400).json({ success: false, error: e.message });
+    }
+  });
 
 /*                                 BASIC IDP                                 */
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
 
-router
-  .route("/prove")
-  .get(isAuthenticated, (req, res) => {
-    const source = req.query.source || "unknown";
-    const attributes = req.query.attribute
-      ? JSON.parse(decodeURIComponent(req.query.attribute))
-      : [];
+router.route("/prove").get((req, res) => {
+  // const source = req.query.source || "unknown";
+  // const attributes = req.query.attribute
+  //   ? JSON.parse(decodeURIComponent(req.query.attribute))
+  //   : [];
 
-    console.log("Source", source);
-    console.log("Attributes", attributes);
-    global_attributes = attributes;
-    req.session.attributes = attributes;
-    console.log("Session Attributes", req.session.attributes);
-    res.render("prove.pug", { source, attributes });
-  })
+  // console.log("Source", source);
+  // console.log("Attributes", attributes);
+  // let attributes=[]
+  global_attributes = req.body.attributes;
+  // req.session.attributes = attributes;
+  // console.log("Session Attributes", req.session.attributes);
+  // res.render("prove.pug", { source, attributes });
+  res.render("prove.pug");
+});
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
 
@@ -381,7 +390,6 @@ router
     res.redirect("/admin-login");
   });
 
-
 router.route("/logout").get((req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -403,18 +411,28 @@ router
     const { rfc23_state } = req.body;
     // console.log("RFC23_state", rfc23_state);
     if (connection_state === "active" && rfc23_state === "completed") {
-      // req.session.user = {
-      //   connection_id: req.body["connection_id"],
-      //   user_name: req.body["their_label"],
-      // };
-      // console.log("req.session",req.session.user );
+      req.session.user = {
+        connection_id: req.body["connection_id"],
+        user_name: req.body["their_label"],
+      };
+      console.log("req.session", req.session.user);
       global_connection_id = req.body["connection_id"];
     }
 
     if (req.body["verified"] === "true") {
+      console.log(req.body);
+      console.log(
+        "extracted val",
+        req.body?.by_format?.pres?.indy?.requested_proof?.revealed_attrs[
+          "issuer"
+        ]?.raw
+      );
+
       global_attributes?.forEach((attribute) => {
         global_revealed_attrs[attribute] =
-          req.body.presentation.requested_proof.revealed_attrs[attribute].raw;
+          req.body.by_format.pres.indy.request_proof.revealed_attrs[
+            attribute
+          ].raw;
       });
       // req.session.revealed_attrs = global_revealed_attrs;
     }
@@ -422,7 +440,11 @@ router
     //   global_revealed_attrs = {};
     //   req.session.revealed_attrs = null;
     // }
-    console.log(req.originalUrl, "global revealed attrs", global_revealed_attrs);
+    console.log(
+      req.originalUrl,
+      "global revealed attrs",
+      global_revealed_attrs
+    );
     // console.log("session revealed attrs", req.session.revealed_attrs);
     // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });

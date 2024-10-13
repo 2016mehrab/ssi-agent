@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  section
+    header
+      h1 Login Form
+    form(id="loginForm" action="/issue-credential" method="POST")
+      fieldset 
+        legend Provide Your Information
+        div.form-group
+          label(for="Name") Name:
+          input(id="Name" name="name" type="text" placeholder="Enter your name" class="form-control")
+        div.form-group
+          label(for="DOB") Date of Birth:
+          input(id="DOB" name="date of birth" type="date" class="form-control")
+        div.form-group
+          label(for="Father") Father's Name:
+          input(id="Father" name="father" type="text" placeholder="Enter your father's name" class="form-control")
+        div.form-group
+          label(for="Mother") Mother's Name:
+          input(id="Mother" name="mother" type="text" placeholder="Enter your mother's name" class="form-control")
+        div.form-group
+          label(for="Address") Address:
+          input(id="Address" name="address" type="text" placeholder="Enter your address" class="form-control")
+        div.form-group
+          label(for="Issuer") Issuer:
+          input(id="Issuer" name="issuer" type="text" placeholder="Enter the issuer" class="form-control")
+        div.form-group
+          input(type="submit" value="Submit" class="btn btn-primary")

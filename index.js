@@ -21,9 +21,9 @@ app.use(
     secret: process.env.IDP_SECRET,
     resave: true,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 180 }),
+    store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 3600 }),
     cookie: {
-      maxAge: 3 * 60 * 1000, 
+      maxAge: 60 * 60 * 1000, 
     },
   })
 );

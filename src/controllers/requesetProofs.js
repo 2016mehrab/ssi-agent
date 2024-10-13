@@ -39,11 +39,13 @@ exports.requestProof = async (req, res) => {
     // only check sp_profile if source field exists in the req body
 
     if (source) {
-      sp_profiles.forEach(result => {
+      sp_profiles.forEach((result) => {
         if (result.domain === source) {
           doesSourceExist = true;
           if (!result.isAdded) {
-            throw new Error(`${result.organization} has not been added to fabric!`)
+            throw new Error(
+              `${result.organization} has not been added to fabric!`
+            );
           }
         }
       });
@@ -52,28 +54,36 @@ exports.requestProof = async (req, res) => {
       }
     }
 
+    // schema id=3WqZsT4vSNn7V49tRu9jpB:2:test-nid:1.0
     // TODO: check if the logged-in user has been given a credential
-    const user = await UserService.findByConnectionId(req.session.user.connection_id);
+    const user = await UserService.findByConnectionId(
+      req.session.user.connection_id
+    );
     console.log(`user->`, user);
     if (!user.hasCredential) {
-      throw new Error(`${req.session.user.user_name} has not been given any credential!`)
+      throw new Error(
+        `${req.session.user.user_name} has not been given any credential!`
+      );
     }
 
     let attrs = req.body.attributes.split(",");
     attrs = attrs.map((e) => e.trim());
     const schema_id = process.env.SCHEMA_ID;
     const attributes = JSON.parse(req.body.attributes);
+    console.log(attributes);
+
     let requestedAttributes = {};
     attributes.forEach((attribute) => {
       requestedAttributes[attribute] = {
         name: attribute,
         restrictions: [
           {
-            schema_id: schema_id,
+            schema_id: "3WqZsT4vSNn7V49tRu9jpB",
           },
         ],
       };
     });
+
     let data = {
       connection_id: req.session.user.connection_id,
       trace: true,
@@ -82,10 +92,30 @@ exports.requestProof = async (req, res) => {
         name: "Prove to IDP",
         version: "1.0",
 
-        requested_attributes: requestedAttributes,
+        // requested_attributes: requestedAttributes,
+        requested_attributes: {
+          name: {
+            name: "name",
+            restrictions: [
+              {
+                schema_id: "3WqZsT4vSNn7V49tRu9jpB",
+              },
+            ],
+          },
+          father: {
+            name: "father",
+            restrictions: [
+              {
+                schema_id: "3WqZsT4vSNn7V49tRu9jpB",
+              },
+            ],
+          },
+        },
         requested_predicates: {},
       },
     };
+    console.log("data", data);
+
     response = await axios.post(url + "/present-proof/send-request", data, {
       headers: {
         accept: "application/json",
@@ -96,11 +126,14 @@ exports.requestProof = async (req, res) => {
     const maxAttempts = 20; // Number of attempts (2.5 per second)
     let success = false;
     for (let i = 0; i < maxAttempts; i++) {
-      const statusResponse = await axios.get(my_server + "/revealed-cred-status", {
-        headers: {
-          accept: "application/json",
-        },
-      });
+      const statusResponse = await axios.get(
+        my_server + "/revealed-cred-status",
+        {
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
       if (statusResponse.data.success === true) {
         success = true;
         break;
@@ -130,7 +163,7 @@ exports.requestProof = async (req, res) => {
     console.log();
     console.log();
     console.log();
-    log(req.originalUrl, e.message)
+    log(req.originalUrl, e.message);
     // res.redirect("http://localhost:3003");
     res.status(500).render("error");
     // res.status(500).json({ message: e.message });
@@ -140,12 +173,42 @@ exports.requestProof = async (req, res) => {
 // WARN: NOT BEING USED
 exports.requestProofV2 = async (req, res) => {
   let response;
-  response = await axios.get(my_server + "/set-connectionid");
-  let attrs = req.body.attributes.split(",");
-  // remove white trailing white spaces
-  attrs = attrs.map((e) => e.trim());
+  const attributesString = req.body.attributes;
 
-  console.info("REQUEST BODY", req.body);
+  // Convert the string back to an array
+  const attrs = JSON.parse(attributesString);
+  // console.log('attrs',attrs);
+
+  let requestedAttributes = {};
+  attrs.forEach((attribute) => {
+    requestedAttributes[attribute] = {
+      name: attribute,
+      restrictions: [
+        {
+          schema_id: "3WqZsT4vSNn7V49tRu9jpB:2:test-nid:1.0",
+        },
+      ],
+    };
+  });
+  console.log("requestedAttributes", requestedAttributes);
+
+  let packet = {
+    auto_remove: true,
+    auto_verify: true,
+    comment: "Verify NID",
+    // connection_id: req.session.user.connectionId,
+    connection_id: "7123e8ac-5062-4a44-b909-255edfc62eb9",
+    presentation_request: {
+      indy: {
+        name: "Citizenship proof",
+        requested_attributes: requestedAttributes,
+        requested_predicates: {},
+        version: "1.0",
+      },
+    },
+    trace: true,
+  };
+
   let data = {
     connection_id: global_connection_id,
     trace: true,
@@ -166,8 +229,6 @@ exports.requestProofV2 = async (req, res) => {
         requested_predicates: {
           Above: {
             name: "Age",
-            p_type: ">=",
-            p_value: parseInt(req.body.age),
             restrictions: [
               {
                 schema_id: req.body.schema_id,
@@ -179,28 +240,25 @@ exports.requestProofV2 = async (req, res) => {
     },
   };
 
-  console.log("REQ BODY", req.body);
-  console.log("Attrs", attrs);
-  console.log("CONSTR DATA", JSON.stringify(data));
+  console.log("packet", packet);
+  // console.log("Attrs", attrs);
+  console.log("CONSTR DATA", JSON.stringify(packet));
   try {
-    response = await axios.post(url + "/present-proof-2.0/send-request", data, {
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-
-
-    response = await axios.post(my_server + "/revealed-cred-status");
-    if (!response.data.success) throw new Error("Fail to get attributes");
-    console.log("attrs from response", response.data.attrs);
-    const hmac = generateHmac(data);
-    const queryString = Object.entries({ ...data, hmac })
-      .map(([key, value]) => `${key}=${value}`)
-      .join("&");
-
-    console.log(queryString);
-    res.redirect(req.body.source + "/callback" + "?" + queryString);
+    // response = await axios.post(url + "/present-proof-2.0/send-request", data, {
+    //   headers: {
+    //     accept: "application/json",
+    //     "Content-Type": "application/json",
+    //   },
+    // });
+    // response = await axios.post(my_server + "/revealed-cred-status");
+    // if (!response.data.success) throw new Error("Fail to get attributes");
+    // console.log("attrs from response", response.data.attrs);
+    // const hmac = generateHmac(data);
+    // const queryString = Object.entries({ ...data, hmac })
+    //   .map(([key, value]) => `${key}=${value}`)
+    //   .join("&");
+    // console.log(queryString);
+    // res.redirect(req.body.source + "/callback" + "?" + queryString);
     // res.status(200).render("waiting.pug");
   } catch (e) {
     res.status(400).render("error.pug");

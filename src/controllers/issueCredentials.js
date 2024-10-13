@@ -90,25 +90,31 @@ exports.postIssueCredentialV1 = async (req, res) => {
 exports.postIssueCredentialDynamic = async (req, res) => {
   try {
     let response;
-    const id = uuidv4();
-    console.log(req.originalUrl, " request body -> ", req.body);
+    // const id = uuidv4();
+    // console.log(req.originalUrl, " request body -> ", req.body);
     // NOTE: Fetching credential definitions
-    response = await axios.get(
-      "http://localhost:8021/credential-definitions/created?schema_id=" +
-      encodeURIComponent(req.body.schema_id)
-    );
+    req.body.schema_id="3WqZsT4vSNn7V49tRu9jpB:2:test-nid:1.0";
+
+    // response = await axios.get(
+    //   "http://localhost:8021/credential-definitions/created?schema_id=" +
+    //   encodeURIComponent(req.body.schema_id)
+    // );
 
     const schemaIdParts = req.body.schema_id.split(":");
     const reqSchemaIdLastPart = schemaIdParts[schemaIdParts.length - 2];
+    console.log('schemaIdParts',schemaIdParts);
+    console.log('reqSchmeaIdLastPart',reqSchemaIdLastPart);
+    
 
     // NOTE: Filtering out the credential definition ID with the same tag as schema name
-    const filteredCredentialId = response.data.credential_definition_ids.find(
-      (id) => {
-        const idParts = id.split(":");
-        const lastPart = idParts[idParts.length - 1];
-        return lastPart.toLowerCase() === reqSchemaIdLastPart.toLowerCase();
-      }
-    );
+    // const filteredCredentialId = response.data.credential_definition_ids.find(
+    //   (id) => {
+    //     const idParts = id.split(":");
+    //     const lastPart = idParts[idParts.length - 1];
+    //     return lastPart.toLowerCase() === reqSchemaIdLastPart.toLowerCase();
+    //   }
+    // );
+    const filteredCredentialId= "3WqZsT4vSNn7V49tRu9jpB:3:CL:2264707:test-nid";
 
     let { schema_id, ...attr } = req.body;
     attr = Object.entries(attr).map(([k, v]) => ({
@@ -116,7 +122,7 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       value: v,
     }));
 
-    attr.push({ name: "Id", value: id });
+    // attr.push({ name: "Id", value: id });
     let data = {
       auto_issue: true,
       auto_remove: false,
@@ -139,6 +145,8 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       //   replacement_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       trace: true,
     };
+    console.log("Data from postIssueCredentialDynamic", data);
+    
 
     response = await axios.post(url + "/issue-credential-2.0/send-offer", data, {
       headers: {

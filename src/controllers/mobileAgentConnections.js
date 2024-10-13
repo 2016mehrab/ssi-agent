@@ -49,7 +49,7 @@ exports.reconnectWithEmail = async (req, res) => {
     // NOTE: Check if user with the same email already exists
     const existingUser = await UserService.findByEmail(connection_mail);
     if (!existingUser) {
-      throw new Error("User with this email already exists");
+      throw new Error("User with this email does not exist");
     }
     req.session.user = {
       connection_id: existingUser.connectionId,

@@ -4,12 +4,12 @@ block content
   section
     h1 Prove
     hr
-    p Requires the following attributes to be proved and sent to #{source}
-    each attr in attributes
-      ul
-        li 
-          strong #{attr}
-    form(action='/request-proof-v1', method='post')
-      input(type='hidden', name='source', value=source)
-      input(type='hidden', name='attributes', value=attributes)
+    //- p Requires the following attributes to be proved and sent to #{source}
+    //- each attr in attributes
+    //-   ul
+    //-     li 
+    //-       strong #{attr}
+    form(action='/request-proof-v2', method='post')
+      //- input(type='hidden', name='source', value=source)
+      input(type='hidden', name='attributes', value=JSON.stringify(['name', 'issuer']) )
       button(type='submit' class='btn btn-error') Approve

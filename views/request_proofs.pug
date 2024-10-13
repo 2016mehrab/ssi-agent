@@ -8,16 +8,16 @@ block content
         fieldset 
           legend 
           div(class="form-group")
-            label(for="schema_name") Select schema 
-            select(id="schema_name" name="schema_id")
-              each val in schema_names
-                option(value=val.id) #{val.name}
+            //- label(for="schema_name") Select schema 
+            //- select(id="schema_name" name="schema_id")
+            //-   each val in schema_names
+            //-     option(value=val.id) #{val.name}
           
-          div(class="form-group")
-            label(for="attr") Request Attribute:
-            input(id="attr" name="attributes" type="text" placeholder="Provide attributes separated by commas")
-          div(class="form-group")
-            label(for="age") Minimum Age:
-            input(id="age" name="age" type="number" placeholder="Minimum Age")
+          //- div(class="form-group")
+          //-   label(for="attr") Request Attribute:
+          //-   input(id="attr" name="attributes" type="text" placeholder="Provide attributes separated by commas")
+          //- div(class="form-group")
+          //-   label(for="age") Minimum Age:
+          //-   input(id="age" name="age" type="number" placeholder="Minimum Age")
           div(class="form-group")
             input(type="submit" class="btn btn-primary" value="Submit")
