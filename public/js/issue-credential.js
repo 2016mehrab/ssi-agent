@@ -3,13 +3,14 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function executeQuery() {
-  fetch("/credential-status")
+
+  fetch("/revealed-cred-status")
     .then((r) => r.json())
     .then((data) => {
-      console.log("Data:", data);
+      // console.log("Data:", data);
 
-      if (data == true) {
-        window.location.href = "/agent_info_page";
+      if (data.success == true) {
+        window.location.href = "/service";
       }
       setTimeout(executeQuery, 5000);
     });

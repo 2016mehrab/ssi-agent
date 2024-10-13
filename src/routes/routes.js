@@ -6,7 +6,8 @@ const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
 const {
   isAuthenticatedSP,
-  isAdmin
+  isAuthenticatedForService,
+  isAdmin,
 } = require("../middlewares/auth-middleware.js");
 
 const { generateHmac, verifyHmac, log } = require("../../utils/index.js");
@@ -115,11 +116,7 @@ router
   .get(getAllPresentProofs)
   .post(postPresentProof)
   .delete(deleteAllPresentProofs);
-router
-  .route("/request-proof-v1")
-  .get(getProofRecords)
-  .post(isAuthenticated, requestProof)
-  .delete(deleteProofRecords);
+
 router
   .route("/request-proof-v2")
   .get(getProofRecords)
@@ -152,48 +149,8 @@ router.route("/generate_invitation_page").get((req, res) => {
   }
 });
 
-router.route("/schema_def_page").get(isAdmin, (req, res) => {
-  try {
-    res.status(200).render("schema.pug");
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-// comes submit req from select_schema.pug
-router.route("/get-credential").post(isAuthenticated, async (req, res) => {
-  try {
-    let response = await axios.get(my_server + "/schemas");
-    const schemas = response.data;
-    let selected_schema = schemas.filter(
-      (schema) => schema.id === req.body.schema_id
-    )[0];
-    global_schema_def = selected_schema.id;
-    res.status(200).render("issue_credential.pug", {
-      schema_id: selected_schema.id,
-      attrs: selected_schema.attrNames,
-    });
-  } catch (e) {
-    console.log(req.originalUrl + " -> " + e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
-router.route("/select_schema").get(isAdmin, async (req, res) => {
-  try {
-    let response = await axios.get(my_server + "/schemas");
-    res
-      .status(200)
-      .render("select_schema.pug", { schema_names: response.data });
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).render("error.pug");
-  }
-});
-
 // TODO: Implement Request Proof from own website
-router.route("/request_proofs").get(isAuthenticated, async (req, res) => {
+router.route("/request_proofs").get(isAuthenticatedSP, async (req, res) => {
   let response;
   try {
     global_connection_id = req.session.user.connection_id;
@@ -264,30 +221,17 @@ router.route("/mobile-agent-connection").get(async (req, res) => {
 /*                                 page render                                 */
 
 /*                                 BASIC IDP                                 */
-router.route("/user-profile").get(isAuthenticated, async (req, res) => {
+router.route("/user-profile").get(isAuthenticatedSP, async (req, res) => {
   res.render("user-profile.pug");
 });
 
 /*                                 PART OF SP-IDP dance: IDP                                 */
 
 router.route("/prove").get((req, res) => {
-  // const source = req.query.source || "unknown";
-  // const attributes = req.query.attribute
-  //   ? JSON.parse(decodeURIComponent(req.query.attribute))
-  //   : [];
-
-  // console.log("Source", source);
-  // console.log("Attributes", attributes);
-  // let attributes=[]
-  global_attributes = req.body.attributes;
-  // req.session.attributes = attributes;
-  // console.log("Session Attributes", req.session.attributes);
-  // res.render("prove.pug", { source, attributes });
   res.render("prove.pug");
 });
 
-
-router.get("/service", isAuthenticatedSP, function(req, res) {
+router.get("/service", isAuthenticatedForService, function (req, res) {
   res.render("service.pug", { user: req.session.user.user_name });
 });
 
@@ -301,7 +245,7 @@ router
         return;
       }
       let references = await ReferenceService.getAll();
-      references = references.filter(issuer => issuer.isAdded);
+      references = references.filter((issuer) => issuer.isAdded);
       res.render("signup_with_idp.pug", { references, title: "References" });
     } catch (e) {
       res.render("error", { message: e.message, error: e });
@@ -318,8 +262,9 @@ router
     const domain = req.protocol + "://" + req.get("host");
     const attributes = JSON.stringify(["Email", "Id", "Name"]);
     console.info("Domain", domain, "Attrs", attributes);
-    const redirectUrl = `${req.body.reference_domain
-      }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
+    const redirectUrl = `${
+      req.body.reference_domain
+    }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
     res.redirect(redirectUrl);
   });
 
@@ -437,12 +382,20 @@ router
         ]?.raw
       );
 
-      global_attributes?.forEach((attribute) => {
-        global_revealed_attrs[attribute] =
-          req.body.by_format.pres.indy.request_proof.revealed_attrs[
-            attribute
-          ].raw;
+      let x = ["name", "issuer"];
+      x.forEach((attr) => {
+        console.log('attr inside x', attr)
+        global_revealed_attrs[attr] =
+          req.body?.by_format?.pres?.indy?.requested_proof?.revealed_attrs[
+            attr
+          ]?.raw;
       });
+      // global_attributes?.forEach((attribute) => {
+      //   global_revealed_attrs[attribute] =
+      //     req.body.by_format.pres.indy.request_proof.revealed_attrs[
+      //       attribute
+      //     ].raw;
+      // });
       // req.session.revealed_attrs = global_revealed_attrs;
     }
     // else {

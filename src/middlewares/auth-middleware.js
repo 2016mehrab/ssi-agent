@@ -13,6 +13,16 @@ module.exports.isAuthenticatedSP = (req, res, next) => {
     res.locals.userName = req.session.user.user_name;
     next();
   } else {
-    res.redirect('/signup_with_idp');
+    res.redirect('/generate_invitation_page');
+  }
+};
+
+module.exports.isAuthenticatedForService = (req, res, next) => {
+  if (req.session.user ) {
+    // res.locals.userName = req.session.user.name;
+    res.locals.userName = req.session.user.user_name;
+    next();
+  } else {
+    res.redirect('/prove');
   }
 };

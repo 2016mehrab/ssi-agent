@@ -192,12 +192,14 @@ exports.requestProofV2 = async (req, res) => {
   });
   console.log("requestedAttributes", requestedAttributes);
 
+  console.log("seesssion", req.session?.user);
+
   let packet = {
-    auto_remove: true,
+    auto_remove: false,
     auto_verify: true,
     comment: "Verify NID",
     // connection_id: req.session.user.connectionId,
-    connection_id: "7123e8ac-5062-4a44-b909-255edfc62eb9",
+    connection_id: req.session.user.connection_id,
     presentation_request: {
       indy: {
         name: "Citizenship proof",
@@ -209,57 +211,24 @@ exports.requestProofV2 = async (req, res) => {
     trace: true,
   };
 
-  let data = {
-    connection_id: global_connection_id,
-    trace: true,
-    presentation_request: {
-      indy: {
-        name: "Prove Your Age",
-        version: "1.0",
-        requested_attributes: {
-          Info: {
-            names: [...attrs],
-            restrictions: [
-              {
-                schema_id: req.body.schema_id,
-              },
-            ],
-          },
-        },
-        requested_predicates: {
-          Above: {
-            name: "Age",
-            restrictions: [
-              {
-                schema_id: req.body.schema_id,
-              },
-            ],
-          },
-        },
-      },
-    },
-  };
-
   console.log("packet", packet);
   // console.log("Attrs", attrs);
   console.log("CONSTR DATA", JSON.stringify(packet));
   try {
-    // response = await axios.post(url + "/present-proof-2.0/send-request", data, {
-    //   headers: {
-    //     accept: "application/json",
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-    // response = await axios.post(my_server + "/revealed-cred-status");
-    // if (!response.data.success) throw new Error("Fail to get attributes");
-    // console.log("attrs from response", response.data.attrs);
-    // const hmac = generateHmac(data);
-    // const queryString = Object.entries({ ...data, hmac })
-    //   .map(([key, value]) => `${key}=${value}`)
-    //   .join("&");
-    // console.log(queryString);
-    // res.redirect(req.body.source + "/callback" + "?" + queryString);
-    // res.status(200).render("waiting.pug");
+    response = await axios.post(
+      url + "/present-proof-2.0/send-request",
+      packet,
+      {
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    response = await axios.post("/revealed-cred-status");
+    if (!response.data.success) throw new Error("Fail to get attributes");
+    console.log(req.originalUrl, "REVEALED ATTRS", global_revealed_attrs);
+    res.status(200).render("waiting.pug");
   } catch (e) {
     res.status(400).render("error.pug");
     // res.status(500).json({ message: e.message });

@@ -4,32 +4,24 @@
 AGENT_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="agent") | .public_url')
 CONTROLLER_TUNNEL=$(curl --silent localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.name=="controller") | .public_url')
 CONTROLLER_TUNNEL="${CONTROLLER_TUNNEL}/webhooks"
-SEED="eshan111111111111111111111111112"
+SEED="verifier000000000000000000000000"
+WALLET_NAME="verifierWallet"
+WALLET_KEY="verifierWalletSecret"
 
-# Seed: eshan111111111111111111111111111
-# DID: 2fQiCWu29TdhH7fPp3octb
-# Verkey: uYfzE22qSukP8a1egCd6D5oQUXv99VzU9jmsMVfCVGo
+# Seed: verifier000000000000000000000000
+# DID: 9NzxkszeRBc543N5QHUYGA
+# Verkey: 5ZtQ2YkyeLUwi9NHeqigURfoin8s6HwK7B8jx76LVViQ
 
-# LATEST SEED
-# Seed: eshan000000000000000000000000000
-# DID: RTxPyPn968eFkQe8b2SXt2
-# Verkey: EvF87VfxedyzKALMh7tf8kB3ZguVWXFNp223szzxshKr
-# alias: eshan
-
-# Winxp --seed Mehrab00000000000000000000000000 \
-# Docker --seed fakeMehrab0000000000000000000000 \
-# Define the command
 
 CMD="aca-py start  --endpoint $AGENT_TUNNEL \
-   --label basic-idp \
+   --label Verifier \
    --inbound-transport http 0.0.0.0 8020 \
    --outbound-transport http \
    --admin 0.0.0.0 8021 \
    --admin-insecure-mode \
-   --auto-provision \
    --wallet-type askar \
-   --wallet-name eshan26112 \
-   --wallet-key eshanwsecret \
+   --wallet-name $WALLET_NAME \
+   --wallet-key $WALLET_KEY \
    --preserve-exchange-records \
    --genesis-url http://test.bcovrin.vonx.io/genesis \
    --trace-target log \
@@ -50,6 +42,7 @@ CMD="aca-py start  --endpoint $AGENT_TUNNEL \
    --debug-credentials \
    --debug-webhooks \
    --auto-verify-presentation \
+   --auto-provision \
    --debug-connections"
 
 # Print the command
