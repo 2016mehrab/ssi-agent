@@ -5,10 +5,11 @@ const axios = require("axios");
 const my_server = process.env.MY_SERVER;
 const ReferenceService = require("../services/referenceService.js");
 const {
-  isAuthenticated,
-  isAdmin,
+  isAuthenticatedSP,
+  isAdmin
 } = require("../middlewares/auth-middleware.js");
 
+const { generateHmac, verifyHmac, log } = require("../../utils/index.js");
 const {
   generateQRcode,
   reconnectWithEmail,
@@ -317,6 +318,17 @@ router
       console.info("DOC->", doc);
       if (!doc) throw new Error("Reference doesn't exist!");
       // NOTE: reference exists now time to check if it resolves from blockchain
+
+// no frontend
+router.route("/federation-entry-acknowledgement").post(async (req, res) => {
+  try {
+    const doc = await ReferenceService.getModelByReference(req.body.refr);
+    if (!doc) throw new Error("Reference doesn't exist!");
+    // if the party is already added to registry then just send acknowledement
+    if (doc.isAdded) {
+      res.status(201).json({ success: true });
+    } else {
+      // otherwise resolving DID
       const constructed_url =
         process.env.MY_SERVER + "/resolve-did?did=" + req.body.did;
       let response = await axios.get(constructed_url);
@@ -368,7 +380,110 @@ router.route("/prove").get((req, res) => {
   res.render("prove.pug");
 });
 
-/*                                 PART OF SP-IDP dance: IDP                                 */
+router.route("/form").get(isAdmin, async (req, res) => {
+  try {
+    res.render("reference-form.pug", { title: "Reference Form" });
+  } catch (e) {
+    res.render("error", { message: e.message, error: e });
+  }
+});
+/*                                 PART OF SP-IDP dance: SP                                 */
+
+// router.get("/service-index", isAuthenticatedSP, function (req, res) {
+//   res.render("service-index.pug", { user: req.session.user.user_email });
+// });
+
+router.get("/service", isAuthenticatedSP, function(req, res) {
+  res.render("service.pug", { user: req.session.user.user_name });
+});
+
+router
+  .route("/signup_with_idp")
+  .get(async (req, res) => {
+    try {
+      if (req.session.user) {
+        // console.log("INSIDE SERVICE REDIRECT CONDITION");
+        res.redirect("/service");
+        return;
+      }
+      let references = await ReferenceService.getAll();
+      references = references.filter(issuer => issuer.isAdded);
+      res.render("signup_with_idp.pug", { references, title: "References" });
+    } catch (e) {
+      res.render("error", { message: e.message, error: e });
+    }
+  })
+  .post((req, res) => {
+    // console.log("PATH", req.url, "REQUEST BODY", req.body);
+
+    if (req.session.user) {
+      // console.log("INSIDE SERVICE REDIRECT CONDITION");
+      res.redirect("/service");
+      return;
+    }
+    const domain = req.protocol + "://" + req.get("host");
+    const attributes = JSON.stringify(["Email", "Id", "Name"]);
+    console.info("Domain", domain, "Attrs", attributes);
+    const redirectUrl = `${req.body.reference_domain
+      }/prove?source=${domain}&attribute=${encodeURIComponent(attributes)}`;
+    res.redirect(redirectUrl);
+  });
+
+router.get("/callback", (req, res) => {
+  const queryString = req.query;
+  let data = Object.fromEntries(new URLSearchParams(queryString));
+  const receivedHmac = data.hmac;
+  delete data.hmac;
+  console.log("hash comparison result->", verifyHmac(data, receivedHmac));
+
+  // TODO: compare did from fabric
+  if (data.did && data.Email && verifyHmac(data, receivedHmac)) {
+    req.session.user = { user_email: data.Email, user_name: data.Name };
+    console.log("inside condition", req.session.user);
+    res.redirect("/service");
+  } else {
+    res.send("Tampered data");
+  }
+});
+
+router.route("/logout").get((req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.redirect("/");
+    }
+    // NOTE: Clear the cookie
+    res.clearCookie("connect.sid");
+    // NOTE: Redirect to the home page
+    res.redirect("/");
+  });
+});
+
+/*                                  User                                 */
+router.route("/user-profile").get(isAuthenticatedSP, async (req, res) => {
+  res.render("user-profile.pug");
+});
+
+/*                                  Admin                                 */
+
+router
+  .route("/admin-login")
+  .get((req, res) => {
+    res.render("admin-login.pug");
+  })
+
+  .post(async (req, res) => {
+    const { name, password } = req.body;
+    if (password === "admin") {
+      req.session.admin = {
+        name: name,
+      };
+      res.redirect("/references");
+      return;
+    }
+    res.redirect("/admin-login");
+  });
+
+/*                                 PART OF SP-IDP dance: SP                                 */
 
 /*                                  Admin                                 */
 

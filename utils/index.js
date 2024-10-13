@@ -10,6 +10,7 @@ exports.generateHmac = function (data) {
 exports.verifyHmac = function (data, receivedHmac) {
   const secret = "IDP's Reference secret";
   console.log("Received hmac", receivedHmac);
+  console.log("data",JSON.stringify(data));
   const hmac = crypto.createHmac("sha256", secret);
 
   const calculatedHmac = hmac.update(JSON.stringify(data)).digest("hex");
@@ -26,4 +27,3 @@ exports.log = function (p, data) {
   console.log("*******log********");
   console.log();
 };
-
