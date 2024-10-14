@@ -14,7 +14,7 @@ function executeQuery() {
       // if (id === data) {
       if ('"' + id + '"' === data) {
         console.log("condition inside");
-        window.location.href = "/user-profile";
+        window.location.href = "/issue_cred_page";
       }
       setTimeout(executeQuery, 5000);
     });

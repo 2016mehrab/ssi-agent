@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(executeQuery, 2000);
+  setTimeout(executeQuery, 10000);
 });
 
 function executeQuery() {
@@ -8,9 +8,9 @@ function executeQuery() {
     .then((data) => {
       console.log("Data:", data);
 
-      if (data == true) {
-        window.location.href = "/agent_info_page";
+      if (data.success) {
+        window.location.href = "/credential_received";
       }
-      setTimeout(executeQuery, 5000);
+      setTimeout(executeQuery, 8000);
     });
 }

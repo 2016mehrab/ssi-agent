@@ -1,11 +1,10 @@
-require("dotenv").config()
-
+require("dotenv").config();
 
 const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
-const UserService = require("../services/UserService.js")
+const UserService = require("../services/UserService.js");
 
 exports.getAllIssueCredentials = async (req, res) => {
   try {
@@ -93,7 +92,7 @@ exports.postIssueCredentialDynamic = async (req, res) => {
     // const id = uuidv4();
     // console.log(req.originalUrl, " request body -> ", req.body);
     // NOTE: Fetching credential definitions
-    req.body.schema_id="3WqZsT4vSNn7V49tRu9jpB:2:test-nid:1.0";
+    req.body.schema_id = "3WqZsT4vSNn7V49tRu9jpB:2:test-nid:1.0";
 
     // response = await axios.get(
     //   "http://localhost:8021/credential-definitions/created?schema_id=" +
@@ -102,9 +101,8 @@ exports.postIssueCredentialDynamic = async (req, res) => {
 
     const schemaIdParts = req.body.schema_id.split(":");
     const reqSchemaIdLastPart = schemaIdParts[schemaIdParts.length - 2];
-    console.log('schemaIdParts',schemaIdParts);
-    console.log('reqSchmeaIdLastPart',reqSchemaIdLastPart);
-    
+    // console.log('schemaIdParts',schemaIdParts);
+    // console.log('reqSchmeaIdLastPart',reqSchemaIdLastPart);
 
     // NOTE: Filtering out the credential definition ID with the same tag as schema name
     // const filteredCredentialId = response.data.credential_definition_ids.find(
@@ -114,13 +112,16 @@ exports.postIssueCredentialDynamic = async (req, res) => {
     //     return lastPart.toLowerCase() === reqSchemaIdLastPart.toLowerCase();
     //   }
     // );
-    const filteredCredentialId= "3WqZsT4vSNn7V49tRu9jpB:3:CL:2264707:test-nid";
+    const filteredCredentialId = "3WqZsT4vSNn7V49tRu9jpB:3:CL:2264707:test-nid";
 
     let { schema_id, ...attr } = req.body;
     attr = Object.entries(attr).map(([k, v]) => ({
       name: k,
       value: v,
     }));
+    attr.push({ name: "issuer", value: "3WqZsT4vSNn7V49tRu9jpB" });
+
+    console.log("attris", attr);
 
     // attr.push({ name: "Id", value: id });
     let data = {
@@ -146,19 +147,24 @@ exports.postIssueCredentialDynamic = async (req, res) => {
       trace: true,
     };
     console.log("Data from postIssueCredentialDynamic", data);
-    
 
-    response = await axios.post(url + "/issue-credential-2.0/send-offer", data, {
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
+    response = await axios.post(
+      url + "/issue-credential-2.0/send-offer",
+      data,
+      {
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    await UserService.updateHasCredentialByConnectionId(req.session.user.connection_id);
+    await UserService.updateHasCredentialByConnectionId(
+      req.session.user.connection_id
+    );
 
     // NOTE: NEED TO REDIRECT TO A SUCCESS PAGE AFTER CRED BEING RECEIVED
-    res.render("waiting.pug");
+    res.render("waiting-for-credential-receive-status.pug");
   } catch (error) {
     console.error(req.originalUrl, " -> ", error.message);
     res.status(500).render("error.pug");

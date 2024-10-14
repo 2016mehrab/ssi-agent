@@ -3,6 +3,7 @@ const url = "http://127.0.0.1:8021";
 const my_server = process.env.MY_SERVER;
 const ngrok_url = "http://127.0.0.1:4040/api/tunnels";
 const axios = require("axios");
+const UserService = require("../services/UserService.js");
 
 exports.verify = async (req, res) => {
   let response;
@@ -85,7 +86,7 @@ exports.sendProof = async (req, res) => {
   try {
     response = await axios.post(
       url +
-      `/present-proof-2.0/records/${req.body.pres_ex_id}/send-presentation`,
+        `/present-proof-2.0/records/${req.body.pres_ex_id}/send-presentation`,
       proof,
       {
         headers: {
@@ -148,26 +149,31 @@ exports.getConnectionStatus = async (req, res) => {
   if (global_connection_id === null) {
     res.status(200).json(null);
   } else {
-    req.session.connection_id = global_connection_id;
+    req.session.user = {
+      connection_id: global_connection_id,
+      // user_name: existingUser.email.split("@")[0],
+    };
+    // req.session.connection_id = global_connection_id;
+
     res.status(200).json(global_connection_id);
   }
 };
 
 // NOTE: route '/revealed-cred-status'
 exports.getRevealedCredStatus = async (req, res) => {
-
   if (Object.keys(global_revealed_attrs).length === 0) {
     res.status(200).json({ success: false });
   } else {
+    req.session.attributes_revealed = true;
     res.status(200).json({ success: true });
   }
 };
 
 exports.getCredentialStatus = async (req, res) => {
   if (global_credential_status === null) {
-    res.status(200).json(null);
+    res.status(200).json({success:false});
   } else {
-    res.status(200).json(global_credential_status);
+    res.status(200).json({success:true});
   }
 };
 exports.getConnectionInfo = async (req, res) => {

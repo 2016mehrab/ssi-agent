@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: process.env.IDP_SECRET,
+    secret: process.env.issuer_secret,
     resave: true,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: config.mongodb.url, autoRemove: 'native', ttl: 3600 }),

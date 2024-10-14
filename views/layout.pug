@@ -1,21 +1,24 @@
 doctype html
 html
   head
-    title Identity Provider
+    title NID Issuer
     link(rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css")
     link(rel="stylesheet" href="/stylesheets/custom.css")
+    link(rel="stylesheet" href="/stylesheets/main.css")
   body
     div(class="container ")
       section 
         div.terminal-nav
           div.terminal-logo
             div.logo.terminal-prompt
-              a.no-style(href="/") IDP
+              a.no-style(href="/") NID issuer
           nav.terminal-menu
             ul
-              if !adminName
-                li
-                  a.menu-item(href="/add-org" class=currentPath === '/add-org' ? 'active' : '') Register SP
+              //- if !adminName
+              //-   li
+              //-     a.menu-item(href="/add-org" class=currentPath === '/add-org' ? 'active' : '') Register SP
+              li
+                a.menu-item(href="/issue_cred_page" ) Issue Credential
               if adminName
                 li
                   a.menu-item(href="/references" class=currentPath === '/references' ? 'active' : '') References
@@ -44,4 +47,4 @@ html
       div(class="footer-container")
         hr
         footer
-          p © 2024 Identity Provider Ltd.
+          p © 2024 NID Issuer

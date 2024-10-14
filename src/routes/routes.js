@@ -21,8 +21,7 @@ const {
 const { getAllSchemas, postSchema } = require("../controllers/schemas.js");
 const {
   getAllCredentialDefinitions,
-  postCredentialDefinition,
-} = require("../controllers/credentialDefinitions.js");
+  postCredentialDefinition, } = require("../controllers/credentialDefinitions.js");
 const {
   getAllIssueCredentials,
   postIssueCredential,
@@ -207,7 +206,8 @@ router.route("/request_proofs").get(isAuthenticated, async (req, res) => {
   }
 });
 
-router.route("/issue_cred_page").get(isAdmin, (req, res) => {
+// router.route("/issue_cred_page").get(isAdmin, (req, res) => {
+router.route("/issue_cred_page").get( (req, res) => {
   res.status(200).render("NID-form.pug");
 });
 
@@ -395,6 +395,8 @@ router.route("/logout").get((req, res) => {
     if (err) {
       return res.redirect("/");
     }
+    global_connection_id=null;
+    global_credential_status=null;
     res.clearCookie("connect.sid"); // Clear the cookie
     res.redirect("/"); // Redirect to the home page
   });
@@ -408,7 +410,7 @@ router
 
   .post(async (req, res) => {
     const connection_state = req.body["state"];
-    const { rfc23_state } = req.body;
+    const { rfc23_state} = req.body;
     // console.log("RFC23_state", rfc23_state);
     if (connection_state === "active" && rfc23_state === "completed") {
       req.session.user = {
@@ -418,34 +420,21 @@ router
       console.log("req.session", req.session.user);
       global_connection_id = req.body["connection_id"];
     }
-
-    if (req.body["verified"] === "true") {
-      console.log(req.body);
-      console.log(
-        "extracted val",
-        req.body?.by_format?.pres?.indy?.requested_proof?.revealed_attrs[
-          "issuer"
-        ]?.raw
-      );
-
-      global_attributes?.forEach((attribute) => {
-        global_revealed_attrs[attribute] =
-          req.body.by_format.pres.indy.request_proof.revealed_attrs[
-            attribute
-          ].raw;
-      });
-      // req.session.revealed_attrs = global_revealed_attrs;
+    if( req.body?.state ==='credential-issued' && req.body?.cred_ex_id){
+      console.log("inside cred received");
+      
+      global_credential_status= true;
     }
-    // else {
-    //   global_revealed_attrs = {};
-    //   req.session.revealed_attrs = null;
-    // }
-    console.log(
-      req.originalUrl,
-      "global revealed attrs",
-      global_revealed_attrs
-    );
+    if( req.body?.state ==='abandoned' && req.body?.cred_ex_id){
+      console.log("inside cred received");
+      
+      global_credential_status= false;
+    }
+
     // console.log("session revealed attrs", req.session.revealed_attrs);
-    // console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
+    console.log("global_credential_status",global_credential_status);
+    console.log("global_connection_id",global_connection_id);
+    
+    console.log("hostname ->", req.hostname, "ip->", req.ip, " ->", req.body);
   });
 module.exports = router;
